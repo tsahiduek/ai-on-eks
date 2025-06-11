@@ -380,7 +380,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 50
       EOT
       ]
     }
@@ -444,7 +444,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 50
       EOT
       ]
     }
@@ -501,7 +501,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 50
       EOT
       ]
     }
@@ -560,7 +560,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 50
       EOT
       ]
     }
@@ -617,7 +617,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 50
       EOT
       ]
     }

@@ -137,7 +137,7 @@ resource "kubectl_manifest" "dynamo_c7i_cpu_nodepool" {
         consolidateAfter    = "300s"
         expireAfter         = "720h"
       }
-      # Same weight as base addons (maximum allowed is 100)
+      # Higher weight than base addons for Dynamo workload priority (base=50, dynamo=100)
       weight = 100
     }
   })
@@ -282,7 +282,7 @@ resource "kubectl_manifest" "dynamo_g6_gpu_nodepool" {
         consolidateAfter    = "300s"
         expireAfter         = "720h"
       }
-      # Same weight as base addons (maximum allowed is 100)
+      # Higher weight than base addons for Dynamo workload priority (base=50, dynamo=100)
       weight = 100
     }
   })

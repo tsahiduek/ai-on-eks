@@ -94,7 +94,7 @@ karpenter_memory_limits = 10000
 # Custom Karpenter Node Pools Configuration
 #
 # High-priority node pools with BuildKit support for Dynamo workloads
-# These have the same weight (100) as base addons for equal priority scheduling
+# These have higher weight (100) than base addons (50) for priority scheduling
 # -------------------------------------------------------------------------------------
 
 # Enable custom Karpenter node pools with higher weights and BuildKit support

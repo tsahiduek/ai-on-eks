@@ -4,7 +4,7 @@ This module provides custom Karpenter node pools with higher weights than the ba
 
 ## Features
 
-- **Equal Priority**: Weight 100 same as base addons (maximum allowed)
+- **Higher Priority**: Weight 100 vs base addons weight 50 for Dynamo workload priority
 - **Dual AMI Support**: AL2023 (default) or Bottlerocket with user namespace configuration
 - **BuildKit Compatible**: Includes user namespace configuration for rootless BuildKit
 - **Optimized Instance Types**: C7i for CPU workloads, G6 for GPU workloads
