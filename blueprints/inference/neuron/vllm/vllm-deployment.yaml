@@ -1,0 +1,88 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $SERVICE_NAME
+  namespace: $SERVICE_NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: $SERVICE_NAME
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: $SERVICE_NAME
+    spec:
+      containers:
+        - name: vllm
+          image: public.ecr.aws/q9t5s3a7/vllm-neuron-release-repo:v$VLLM_VERSION
+          command: ["/bin/sh", "-c"]
+          args: [
+            "python3 /vllm-workspace/vllm_serve.py"
+          ]
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: token
+            - name: MODEL_ID
+              value: "$MODEL_ID"
+            - name: GPU_MEMORY_UTILIZATION
+              value: "$GPU_MEMORY_UTILIZATION"
+            - name: MAX_MODEL_LEN
+              value: "$MAX_MODEL_LEN"
+            - name: MAX_NUM_SEQ
+              value: "$MAX_NUM_SEQ"
+            - name: MAX_NUM_BATCHED_TOKENS
+              value: "$MAX_NUM_BATCHED_TOKENS"
+            - name: TOKENIZER_POOL_SIZE
+              value: "$TOKENIZER_POOL_SIZE"
+            - name: MAX_PARALLEL_LOADING_WORKERS
+              value: "$MAX_PARALLEL_LOADING_WORKERS"
+            - name: PIPELINE_PARALLEL_SIZE
+              value: "$PIPELINE_PARALLEL_SIZE"
+            - name: TENSOR_PARALLEL_SIZE
+              value: "$TENSOR_PARALLEL_SIZE"
+            - name: ENABLE_PREFIX_CACHING
+              value: "$ENABLE_PREFIX_CACHING"
+            - name: NUM_GPUS
+              value: "$NUM_GPUS"
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              aws.amazon.com/neuron: $NUM_GPUS
+            requests:
+              aws.amazon.com/neuron: $NUM_GPUS
+              memory: 100Gi
+          volumeMounts:
+            - mountPath: /vllm-workspace/vllm_serve.py
+              subPath: vllm_serve.py
+              name: vllm-script
+      tolerations:
+        - key: "aws.amazon.com/neuron"
+          operator: "Exists"
+          effect: "NoSchedule"
+      volumes:
+        - configMap:
+            items:
+              - key: vllm_serve.py
+                path: vllm_serve.py
+            name: vllm-serve
+          name: vllm-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $SERVICE_NAME
+  namespace: $SERVICE_NAMESPACE
+spec:
+  selector:
+    app.kubernetes.io/name: $SERVICE_NAME
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
