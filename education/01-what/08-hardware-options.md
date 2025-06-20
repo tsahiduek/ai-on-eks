@@ -240,5 +240,46 @@ spec:
 
 ## Next Steps
 
-- Explore the "Why" section to understand architectural decisions for hardware selection
-- Learn about cost optimization strategies for AI/ML workloads on EKS
+- Explore [AI/ML Workload Patterns](09-workload-patterns.md) to understand common deployment patterns
+- Review [Summary and Integration](10-summary.md) for a comprehensive overview
+
+## Repository Examples
+
+This repository provides comprehensive examples of hardware configurations for different AI/ML workloads:
+
+**NVIDIA GPU Examples:**
+- **GPU Node Groups**: See [GPU configurations](../../infra/base/terraform/modules/compute) for different GPU instance types
+- **Multi-GPU Training**: Check [distributed training examples](../../blueprints/training) using multiple GPUs
+- **GPU Inference**: Review [inference blueprints](../../blueprints/inference) optimized for GPU serving
+
+**AWS Trainium Examples:**
+- **Training Infrastructure**: See [Trainium configurations](../../infra/trainium-inferentia) for cost-effective training
+- **Distributed Training**: Examples of multi-node training on Trainium
+- **Model Optimization**: Patterns for optimizing models for Trainium
+
+**AWS Inferentia Examples:**
+- **Inference Optimization**: Check [Inferentia examples](../../infra/trainium-inferentia) for cost-effective inference
+- **Model Compilation**: Examples of compiling models for Inferentia
+- **Scaling Patterns**: Auto-scaling configurations for Inferentia-based inference
+
+**Mixed Hardware Deployments:**
+- **JARK Stack**: See the [JARK implementation](../../infra/jark-stack) using different hardware for different components
+- **Hybrid Clusters**: Examples of clusters with multiple hardware types
+- **Workload Scheduling**: Node affinity and taint configurations for hardware-specific scheduling
+
+**Infrastructure as Code:**
+- **Terraform Modules**: Check [compute modules](../../infra/base/terraform/modules/compute) for reusable hardware configurations
+- **EKS Node Groups**: See various node group configurations throughout the repository
+- **Auto-scaling**: Examples of cluster autoscaler and Karpenter configurations
+
+**Specialized Solutions:**
+- **NVIDIA Triton**: See [Triton infrastructure](../../infra/nvidia-triton-server) optimized for GPU inference
+- **MLflow**: Check [MLflow setup](../../infra/mlflow) for experiment tracking infrastructure
+- **JupyterHub**: Review [JupyterHub configurations](../../infra/jupyterhub) for interactive development
+
+**Learn More:**
+- [Amazon EC2 Instance Types](https://aws.amazon.com/ec2/instance-types/)
+- [AWS Trainium Documentation](https://aws.amazon.com/machine-learning/trainium/)
+- [AWS Inferentia Documentation](https://aws.amazon.com/machine-learning/inferentia/)
+- [NVIDIA GPU Cloud Documentation](https://docs.nvidia.com/ngc/)
+- [EKS GPU AMI Documentation](https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html)

@@ -159,5 +159,35 @@ Splits individual operations across multiple devices.
 
 ## Next Steps
 
-- Learn about [Storage Solutions for AI/ML](storage-solutions.md)
-- Explore [Hardware Options](hardware-options.md) for distributed computing
+- Learn about [Storage Solutions for AI/ML](07-storage-solutions.md)
+- Explore [Hardware Options](08-hardware-options.md) for distributed computing
+
+## Repository Examples
+
+This repository demonstrates various distributed computing patterns for AI/ML workloads:
+
+**Ray and KubeRay:**
+- **Ray Cluster Setup**: See [Ray infrastructure examples](../../infra/ray) for setting up Ray clusters on EKS
+- **Distributed Training**: Check [Ray training blueprints](../../blueprints/training/ray) for distributed model training
+- **Ray Serve**: Explore [Ray serving examples](../../blueprints/inference/ray-serve) for scalable inference
+- **JARK Stack**: Review the [JARK stack implementation](../../infra/jark-stack) (Jupyter, Argo, Ray, Kubeflow)
+
+**PyTorch Distributed:**
+- **DDP Training**: See examples of DistributedDataParallel training on EKS
+- **FSDP Examples**: Check FullyShardedDataParallel implementations for large models
+- **Multi-Node Training**: Examples of training across multiple GPU nodes
+
+**Horovod:**
+- **Multi-Framework Training**: Examples using Horovod with PyTorch and TensorFlow
+- **MPI Integration**: Configurations for high-performance networking
+
+**Kubeflow:**
+- **Training Operators**: See [Kubeflow examples](../../infra/kubeflow) for managed distributed training
+- **Pipeline Integration**: Examples of ML pipelines with distributed components
+
+**Learn More:**
+- [Ray Documentation](https://docs.ray.io/)
+- [KubeRay Documentation](https://ray-project.github.io/kuberay/)
+- [PyTorch Distributed](https://pytorch.org/tutorials/beginner/dist_overview.html)
+- [Horovod Documentation](https://horovod.readthedocs.io/)
+- [Kubeflow Training Operator](https://www.kubeflow.org/docs/components/training/)

@@ -6,13 +6,47 @@ Inference libraries and backends are specialized software components that optimi
 
 An inference library is a software package that provides optimized implementations of operations required for model inference. These libraries handle:
 
-- Efficient tensor operations
+- Efficient tensor operations: Optimized mathematical operations on multi-dimensional arrays (tensors) that represent data in neural networks, including matrix multiplications, convolutions, and element-wise operations accelerated using specialized algorithms
 - Memory management
-- Hardware acceleration
+- Hardware acceleration: Leverage specialized hardware through optimized kernels, CUDA for NVIDIA GPUs, ROCm for AMD GPUs, and custom optimizations for TPUs, Trainium, and Inferentia chips
 - Batching strategies
 - Model optimization techniques
 
 ## Popular Inference Libraries
+
+### llama.cpp
+
+A C++ implementation focused on efficient inference of LLaMA models and other transformer architectures.
+
+**Key Features:**
+- **CPU Optimization**: Highly optimized for CPU inference with minimal dependencies
+- **Quantization Support**: Extensive support for various quantization formats (GGUF, GGML)
+- **Memory Efficiency**: Designed to run large models on consumer hardware
+- **Cross-Platform**: Runs on various architectures including ARM, x86, and Apple Silicon
+- **Model Format Support**: Native support for GGUF format and conversion from other formats
+
+**Best For:**
+- CPU-only inference deployments
+- Edge devices and resource-constrained environments
+- Local development and testing
+- Cost-effective inference without GPU requirements
+
+### LMDeploy
+
+A toolkit for compressing, deploying, and serving LLMs developed by OpenMMLab.
+
+**Key Features:**
+- **Model Compression**: Advanced quantization and pruning techniques
+- **Multi-Backend Support**: Supports TensorRT, ONNX Runtime, and PyTorch backends
+- **Efficient Serving**: Optimized serving with continuous batching
+- **Model Conversion**: Tools for converting models to optimized formats
+- **Production Ready**: Built for enterprise deployment scenarios
+
+**Best For:**
+- Production LLM deployments requiring optimization
+- Multi-backend inference scenarios
+- Models requiring aggressive compression
+- Enterprise environments with diverse hardware
 
 ### vLLM
 
@@ -43,7 +77,7 @@ NVIDIA's TensorRT-LLM is an inference library optimized specifically for LLMs on
 
 **Best For:**
 - Production deployments requiring maximum performance
-- Models running on NVIDIA A100/H100 GPUs
+- Models running on NVIDIA A100/H100 GPUs (optimized for these architectures with features like Transformer Engine support and FP8 precision)
 - Latency-sensitive applications
 
 ### Hugging Face Transformers
@@ -64,7 +98,7 @@ A popular library that provides implementations for a wide range of transformer-
 
 ### ONNX Runtime
 
-A cross-platform inference accelerator that works with models in the ONNX format.
+A cross-platform inference accelerator that works with models in the ONNX (Open Neural Network Exchange) format. ONNX is an open standard that allows models trained in one framework (like PyTorch or TensorFlow) to be converted and run in different environments, making it crucial for cross-platform deployment and interoperability. 
 
 **Key Features:**
 - **Framework Agnostic**: Works with models from PyTorch, TensorFlow, etc.
@@ -121,5 +155,35 @@ Many inference servers can use different backends depending on the model type an
 
 ## Next Steps
 
-- Learn about [Inference Servers](inference-servers.md) that use these libraries
-- Explore [Distributed Computing Frameworks](distributed-computing.md) for scaling inference
+- Learn about [Inference Servers](05-inference-servers.md) that use these libraries
+- Explore [Distributed Computing Frameworks](06-distributed-computing.md) for scaling inference
+
+## Repository Examples
+
+This repository demonstrates practical implementations of various inference libraries:
+
+**vLLM Examples:**
+- **Basic vLLM Deployment**: See [vLLM blueprints](../../blueprints/inference/vllm-rayserve-gpu) for deploying popular LLMs
+- **Multi-GPU vLLM**: Check examples for tensor parallelism across multiple GPUs
+- **vLLM with Ray**: Explore distributed serving patterns with Ray Serve
+- **Inferentia Support**: Review [vLLM on Inferentia](../../blueprints/inference/vllm-rayserve-inf2) for cost-effective inference
+
+**TensorRT-LLM Examples:**
+- **Optimized Inference**: Review [NVIDIA Triton with TensorRT](../../blueprints/inference/vllm-nvidia-triton-server-gpu) for maximum performance
+- **Multi-GPU Deployment**: See configurations for large model serving
+
+**NVIDIA Triton Integration:**
+- **Multi-Backend Serving**: Check [Triton server examples](../../infra/nvidia-triton-server) that use different inference backends
+- **Dynamic Batching**: See configurations for optimizing throughput
+- **vLLM with Triton**: Review [vLLM Triton integration](../../blueprints/inference/vllm-nvidia-triton-server-gpu) for production serving
+
+**Hugging Face Integration:**
+- **Transformers Deployment**: Review examples using Hugging Face Transformers library
+- **Model Hub Integration**: See patterns for loading models from Hugging Face Hub
+
+**Learn More:**
+- [vLLM Documentation](https://docs.vllm.ai/)
+- [TensorRT-LLM Documentation](https://nvidia.github.io/TensorRT-LLM/)
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers/index)
+- [ONNX Runtime Documentation](https://onnxruntime.ai/docs/)
+- [DeepSpeed Inference](https://www.deepspeed.ai/tutorials/inference-tutorial/)

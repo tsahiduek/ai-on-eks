@@ -199,5 +199,44 @@ S3 (Raw Data) → FSx for Lustre (Training Access) → Training Pods
 
 ## Next Steps
 
-- Learn about [Hardware Options](hardware-options.md) for AI/ML workloads
-- Explore the "Why" section to understand architectural decisions for storage
+- Learn about [Hardware Options](08-hardware-options.md) for AI/ML workloads
+- Explore [AI/ML Workload Patterns](09-workload-patterns.md) for deployment strategies
+
+## Repository Examples
+
+This repository provides practical examples of storage configurations for AI/ML workloads:
+
+**FSx for Lustre:**
+- **High-Performance Training**: See [FSx configurations](../../infra/base/terraform/modules/storage) for distributed training workloads
+- **Model Repository**: Examples of using FSx as a high-speed model repository
+- **S3 Integration**: Patterns for loading data from S3 into FSx
+
+**Amazon EFS:**
+- **Shared Model Storage**: Check examples of using EFS for shared model access across pods
+- **Persistent Volumes**: EFS StorageClass configurations for Kubernetes
+- **Cross-AZ Access**: Examples of multi-AZ model serving
+
+**Amazon S3:**
+- **Model Artifacts**: Patterns for storing and versioning trained models
+- **Dataset Management**: Examples of organizing training datasets in S3
+- **Checkpoint Storage**: Configurations for saving training checkpoints
+
+**Instance Storage:**
+- **High-Performance Caching**: Examples using NVMe storage for data caching
+- **Temporary Processing**: Patterns for using instance storage as scratch space
+
+**Storage Integration Examples:**
+- **Multi-Tier Storage**: See [storage blueprints](../../blueprints/storage) combining different storage types
+- **Data Loading Patterns**: Examples of efficient data loading for training and inference
+- **Backup and Recovery**: Patterns for model and data backup strategies
+
+**Infrastructure Examples:**
+- **Terraform Modules**: Check [storage modules](../../infra/base/terraform/modules/storage) for reusable storage configurations
+- **Kubernetes Manifests**: See storage class and PVC examples throughout the blueprints
+
+**Learn More:**
+- [Amazon FSx for Lustre Documentation](https://docs.aws.amazon.com/fsx/latest/LustreGuide/)
+- [Amazon EFS Documentation](https://docs.aws.amazon.com/efs/)
+- [Amazon S3 Documentation](https://docs.aws.amazon.com/s3/)
+- [EKS Storage Documentation](https://docs.aws.amazon.com/eks/latest/userguide/storage.html)
+- [Kubernetes Storage Documentation](https://kubernetes.io/docs/concepts/storage/)

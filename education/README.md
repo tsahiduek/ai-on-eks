@@ -4,19 +4,19 @@ This directory contains comprehensive educational materials for Solutions Archit
 
 ## Educational Program Structure
 
-### 1. [Foundational Concepts ("What")](what/README.md)
+### 1. [Foundational Concepts ("What")](01-what/README.md)
 - Understanding AI/ML models, inference libraries, and infrastructure components
 
-### 2. [Architectural Decisions ("Why")](why/README.md)
+### 2. [Architectural Decisions ("Why")](02-why/README.md)
 - Reasoning behind storage choices, inference engines, and hardware selection
 
-### 3. [Implementation Guide ("How")](how/README.md)
+### 3. [Implementation Guide ("How")](03-how/README.md)
 - Deployment patterns, observability, and operations
 
-### 4. [Hands-on Labs](labs/README.md)
+### 4. [Hands-on Labs](04-labs/README.md)
 - Practical exercises for real-world experience
 
-### 5. [Case Studies](case-studies/README.md)
+### 5. [Case Studies](05-case-studies/README.md)
 - Real-world examples and success stories
 
 ## Target Audience
