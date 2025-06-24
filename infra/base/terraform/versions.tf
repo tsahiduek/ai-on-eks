@@ -4,15 +4,15 @@ terraform {
   required_providers {
     archive = {
       source  = "hashicorp/archive"
-      version = ">=2.7.0"
+      version = ">= 2.7.0, < 3.0.0"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 3.72"
+      version = ">= 3.72, < 6.0.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.10"
+      version = ">= 2.10, < 3.0.0"
     }
     helm = {
       source  = "hashicorp/helm"
@@ -20,15 +20,15 @@ terraform {
     }
     http = {
       source  = "hashicorp/http"
-      version = ">=3.5.0"
+      version = ">= 3.5.0, < 4.0.0"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.14"
+      version = ">= 1.14, < 2.0.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.6.0" # Replace with the appropriate version of the random provider
+      version = ">= 3.6.0, < 4.0.0"
     }
   }
 

@@ -204,7 +204,7 @@ build_base_image() {
         # Build command based on framework
         local build_cmd="./build.sh"
         if [ "${FRAMEWORK}" != "none" ]; then
-            build_cmd="${build_cmd} --framework ${FRAMEWORK} --make-efa"
+            build_cmd="${build_cmd} --framework ${FRAMEWORK}"
         fi
         
         if ${build_cmd} 2>&1 | tee /tmp/build_output.log; then
@@ -256,13 +256,44 @@ fi
 
 success "Base image build completed!"
 
+# Update environment file with DYNAMO_IMAGE if image was pushed
+if [ "${PUSH_IMAGE}" = true ]; then
+    info "Updating environment file with DYNAMO_IMAGE..."
+
+    # Check if DYNAMO_IMAGE is already in the environment file
+    if grep -q "^export DYNAMO_IMAGE=" "${ENV_FILE}"; then
+        # Update existing line
+        sed -i "s|^export DYNAMO_IMAGE=.*|export DYNAMO_IMAGE=\"${REGISTRY_IMAGE_NAME}\"|" "${ENV_FILE}"
+        success "Updated DYNAMO_IMAGE in ${ENV_FILE}"
+    else
+        # Add new line
+        echo "" >> "${ENV_FILE}"
+        echo "# Dynamo base image for inference graphs" >> "${ENV_FILE}"
+        echo "export DYNAMO_IMAGE=\"${REGISTRY_IMAGE_NAME}\"" >> "${ENV_FILE}"
+        success "Added DYNAMO_IMAGE to ${ENV_FILE}"
+    fi
+
+    # Also export for current session
+    export DYNAMO_IMAGE="${REGISTRY_IMAGE_NAME}"
+    success "DYNAMO_IMAGE exported for current session"
+fi
+
 echo ""
 echo "Summary:"
 echo "  Framework: ${FRAMEWORK}"
 echo "  Local image: ${LOCAL_IMAGE_NAME}"
 echo "  Registry image: ${REGISTRY_IMAGE_NAME}"
 echo "  Pushed: ${PUSH_IMAGE}"
+if [ "${PUSH_IMAGE}" = true ]; then
+    echo "  Environment file updated: Yes"
+fi
 echo ""
-echo "To use this image in your inference graphs:"
-echo "  export DYNAMO_IMAGE=${REGISTRY_IMAGE_NAME}"
-echo "  dynamo build your_graph:Service --containerize"
+if [ "${PUSH_IMAGE}" = true ]; then
+    echo "The DYNAMO_IMAGE environment variable has been set automatically."
+    echo "You can now run inference graph deployments:"
+    echo "  ./deploy.sh"
+else
+    echo "To use this image in your inference graphs:"
+    echo "  export DYNAMO_IMAGE=${REGISTRY_IMAGE_NAME}"
+    echo "  dynamo build your_graph:Service --containerize"
+fi

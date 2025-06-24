@@ -7,7 +7,7 @@ targets=(
 )
 
 # Initialize Terraform
-terraform init -upgrade
+terraform init
 
 TERRAFORM_COMMAND="terraform apply -auto-approve"
 # Check if blueprint.tfvars exists

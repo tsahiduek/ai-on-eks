@@ -169,6 +169,13 @@ export DOCKER_SERVER="\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com"
 export CI_REGISTRY_IMAGE="\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com"
 export CI_COMMIT_SHA="\${IMAGE_TAG}"
 
+# ECR credentials for Dynamo Cloud deployment
+# These are used by the deploy script for buildkit to push pipeline images
+export DOCKER_USERNAME="AWS"
+export PIPELINES_DOCKER_USERNAME="AWS"
+# Note: DOCKER_PASSWORD and PIPELINES_DOCKER_PASSWORD are set dynamically during deployment
+# using: aws ecr get-login-password --region \${AWS_REGION}
+
 # Completed scripts tracking
 export COMPLETED_SCRIPTS=()
 EOF
@@ -282,6 +289,48 @@ success "Platform container images built and pushed successfully"
 cd "${BLUEPRINT_DIR}"
 
 #---------------------------------------------------------------
+# Phase 3.5: Image Build Engine Configuration (Optional)
+#---------------------------------------------------------------
+
+section "Phase 3.5: Image Build Engine Configuration"
+
+# Ask user about image build engine preference
+info "Dynamo supports different image build engines:"
+info "  - buildkit (default): Fast, efficient, good compatibility"
+info "  - kaniko: Rootless builds, enhanced security, good for restricted environments"
+info ""
+echo -n "Would you like to use kaniko instead of buildkit? (y/N): "
+read -r USE_KANIKO
+
+if [[ "${USE_KANIKO,,}" =~ ^(y|yes)$ ]]; then
+    info "Configuring Dynamo to use kaniko build engine..."
+    
+    # Path to the dynamo-platform-values.yaml file
+    VALUES_FILE="${BLUEPRINT_DIR}/dynamo/deploy/cloud/helm/dynamo-platform-values.yaml"
+    
+    # Check if the file exists
+    if [ -f "${VALUES_FILE}" ]; then
+        # Update imageBuildEngine from buildkit to kaniko
+        if grep -q "imageBuildEngine: buildkit" "${VALUES_FILE}"; then
+            sed -i 's/imageBuildEngine: buildkit/imageBuildEngine: kaniko/' "${VALUES_FILE}"
+            success "Updated imageBuildEngine to kaniko in ${VALUES_FILE}"
+        else
+            warn "imageBuildEngine: buildkit not found in expected format"
+            warn "Please manually update the imageBuildEngine setting in:"
+            warn "${VALUES_FILE}"
+        fi
+    else
+        error "Values file not found: ${VALUES_FILE}"
+        error "Cannot update image build engine configuration"
+        exit 1
+    fi
+else
+    info "Keeping default buildkit image build engine"
+fi
+
+success "Phase 3.5 completed: Image build engine configured"
+
+#---------------------------------------------------------------
 # Phase 4: Dynamo Platform Deployment
 #---------------------------------------------------------------
 
@@ -306,6 +355,30 @@ if [ -f "deploy/helm/deploy.sh" ]; then
     export PIPELINES_DOCKER_SERVER=${DOCKER_SERVER}
     export OPERATOR_IMAGE=${DOCKER_SERVER}/${OPERATOR_ECR_REPOSITORY}:${IMAGE_TAG}
     export API_STORE_IMAGE=${DOCKER_SERVER}/${API_STORE_ECR_REPOSITORY}:${IMAGE_TAG}
+
+    # Set ECR credentials for buildkit to push pipeline images
+    # According to dynamo/docs/guides/dynamo_deploy/dynamo_cloud.md:
+    # - DOCKER_USERNAME/DOCKER_PASSWORD: for pulling platform component images
+    # - PIPELINES_DOCKER_USERNAME/PIPELINES_DOCKER_PASSWORD: for buildkit to push pipeline images
+    info "Getting ECR credentials for buildkit..."
+
+    ECR_PASSWORD=$(aws ecr get-login-password --region ${AWS_REGION})
+    if [ -z "$ECR_PASSWORD" ]; then
+        error "Failed to get ECR login password. Check AWS credentials and permissions."
+        exit 1
+    fi
+
+    # Set credentials for platform component image pulls
+    export DOCKER_USERNAME="AWS"
+    export DOCKER_PASSWORD="$ECR_PASSWORD"
+
+    # Set credentials for buildkit to push pipeline images to ECR
+    export PIPELINES_DOCKER_USERNAME="AWS"
+    export PIPELINES_DOCKER_PASSWORD="$ECR_PASSWORD"
+
+    info "ECR credentials configured:"
+    info "- Platform component pulls: DOCKER_USERNAME/DOCKER_PASSWORD"
+    info "- Pipeline image pushes: PIPELINES_DOCKER_USERNAME/PIPELINES_DOCKER_PASSWORD"
 
     # Run the deploy script
     ./deploy.sh

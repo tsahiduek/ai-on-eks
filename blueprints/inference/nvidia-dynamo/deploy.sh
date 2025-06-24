@@ -117,42 +117,73 @@ fi
 section "Configuring Dynamo Cloud Endpoint"
 if [ -z "${DYNAMO_CLOUD:-}" ]; then
     warn "DYNAMO_CLOUD environment variable is not set."
+    info "Setting DYNAMO_CLOUD to http://localhost:8080 for local testing."
+    export DYNAMO_CLOUD="http://localhost:8080"
 
-    # Try to get the Istio ingress gateway address
-    info "Attempting to find Istio ingress gateway address..."
-    ISTIO_INGRESS=$(kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
-    if [ -z "$ISTIO_INGRESS" ]; then
-        ISTIO_INGRESS=$(kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+    # Check for available Dynamo store services
+    info "Checking for available Dynamo store services..."
+    DYNAMO_STORE_SERVICE=""
+    if kubectl get svc -n "${NAMESPACE}" dynamo-cloud-dynamo-api-store >/dev/null 2>&1; then
+        DYNAMO_STORE_SERVICE="dynamo-cloud-dynamo-api-store"
+    elif kubectl get svc -n "${NAMESPACE}" dynamo-store >/dev/null 2>&1; then
+        DYNAMO_STORE_SERVICE="dynamo-store"
     fi
 
-    if [ ! -z "$ISTIO_INGRESS" ]; then
-        success "Found Istio ingress gateway address: $ISTIO_INGRESS"
-        info "Setting DYNAMO_CLOUD to http://$ISTIO_INGRESS"
-        export DYNAMO_CLOUD="http://$ISTIO_INGRESS"
-    else
-        warn "Could not determine Istio ingress gateway address."
-        info "Setting DYNAMO_CLOUD to http://localhost:8080 for local testing."
-        info "You will need to set up port-forwarding to access the API store."
-        export DYNAMO_CLOUD="http://localhost:8080"
+    if [ -n "$DYNAMO_STORE_SERVICE" ]; then
+        success "Found Dynamo store service: ${DYNAMO_STORE_SERVICE}"
+        info ""
+        warn "MANUAL ACTION REQUIRED:"
+        warn "Please set up port-forwarding for the Dynamo API store service."
+        warn ""
+        warn "In a separate terminal, run the following command:"
+        echo "  kubectl port-forward svc/${DYNAMO_STORE_SERVICE} 8080:80 -n ${NAMESPACE}"
+        warn ""
+        warn "Keep that terminal open during the entire deployment process."
+        warn ""
+        info "Once port-forwarding is active, press ENTER to continue..."
+        read -r
 
-        # Set up port forwarding for the API store
-        info "Setting up port forwarding for Dynamo API store..."
-        pkill -f "kubectl port-forward.* 8080:80" || true
-
-        # Try different service names
-        if kubectl get svc -n "${NAMESPACE}" dynamo-cloud-dynamo-api-store >/dev/null 2>&1; then
-            kubectl port-forward svc/dynamo-cloud-dynamo-api-store 8080:80 -n ${NAMESPACE} &
-        elif kubectl get svc -n "${NAMESPACE}" dynamo-store >/dev/null 2>&1; then
-            kubectl port-forward svc/dynamo-store 8080:80 -n ${NAMESPACE} &
+        # Test the connection
+        info "Testing connection to Dynamo Cloud endpoint..."
+        if curl -s --connect-timeout 5 "${DYNAMO_CLOUD}/health" >/dev/null 2>&1 || \
+           curl -s --connect-timeout 5 "${DYNAMO_CLOUD}/" >/dev/null 2>&1; then
+            success "Successfully connected to Dynamo Cloud endpoint"
         else
-            warn "Could not find Dynamo API store service for port forwarding"
+            error "Failed to connect to Dynamo Cloud endpoint at ${DYNAMO_CLOUD}"
+            error "Please ensure port-forwarding is active and try again."
+            error ""
+            error "Debug steps:"
+            error "1. Verify port-forwarding is running:"
+            error "   kubectl port-forward svc/${DYNAMO_STORE_SERVICE} 8080:80 -n ${NAMESPACE}"
+            error "2. Test the connection manually:"
+            error "   curl ${DYNAMO_CLOUD}/"
+            error "3. Check service status:"
+            error "   kubectl get svc ${DYNAMO_STORE_SERVICE} -n ${NAMESPACE}"
+            exit 1
         fi
-
-        # Wait for port forwarding to establish
-        sleep 3
+    else
+        error "Could not find any Dynamo API store service in namespace ${NAMESPACE}"
+        error "Available services in namespace ${NAMESPACE}:"
+        kubectl get svc -n "${NAMESPACE}" 2>/dev/null || echo "  No services found"
+        error ""
+        error "Please ensure the Dynamo infrastructure is properly installed."
+        error "Run: infra/nvidia-dynamo/install.sh"
+        exit 1
     fi
 else
     success "DYNAMO_CLOUD is already set to: ${DYNAMO_CLOUD}"
+
+    # Test the connection if it's a localhost endpoint
+    if [[ "${DYNAMO_CLOUD}" == *"localhost"* ]]; then
+        info "Testing connection to Dynamo Cloud endpoint..."
+        if curl -s --connect-timeout 5 "${DYNAMO_CLOUD}/health" >/dev/null 2>&1 || \
+           curl -s --connect-timeout 5 "${DYNAMO_CLOUD}/" >/dev/null 2>&1; then
+            success "Successfully connected to Dynamo Cloud endpoint"
+        else
+            warn "Could not connect to Dynamo Cloud endpoint at ${DYNAMO_CLOUD}"
+            warn "If using localhost, ensure port-forwarding is active."
+        fi
+    fi
 fi
 
 #---------------------------------------------------------------
@@ -255,16 +286,55 @@ info "Working in example directory: ${EXAMPLE_DIR}"
 # Set Docker platform for compatibility
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-# Check if DYNAMO_IMAGE is set, if not, suggest building base image
+# Check if DYNAMO_IMAGE is set, if not, provide options
 if [ -z "${DYNAMO_IMAGE:-}" ]; then
     warn "DYNAMO_IMAGE environment variable not set"
-    info "You may need to build a base image first:"
-    info "  cd ${SCRIPT_DIR}"
-    info "  ./build-base-image.sh vllm --push"
-    info "  export DYNAMO_IMAGE=\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com/dynamo-base:latest-vllm"
     info ""
-    info "Continuing with default base image..."
+
+    # Check if there are existing images in ECR
+    info "Checking for existing images in ECR repository..."
+    EXISTING_IMAGES=$(aws ecr describe-images --repository-name "${BASE_ECR_REPOSITORY}" --region "${AWS_REGION}" --query 'imageDetails[*].imageTags[]' --output text 2>/dev/null | grep -v "None" | sort -u | head -10 || echo "")
+
+    if [ -n "${EXISTING_IMAGES}" ]; then
+        info "Found existing images in ECR:"
+        echo "${EXISTING_IMAGES}" | while read -r tag; do
+            echo "  - ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BASE_ECR_REPOSITORY}:${tag}"
+        done
+        info ""
+
+        info "Available images:"
+        echo "${EXISTING_IMAGES}" | nl -w2 -s') '
+        echo -n "Enter the number of the image to use (or 0 to exit): "
+        read -r IMAGE_CHOICE
+
+        if [ "${IMAGE_CHOICE}" = "0" ]; then
+            info "Exiting..."
+            exit 0
+        fi
+
+        SELECTED_TAG=$(echo "${EXISTING_IMAGES}" | sed -n "${IMAGE_CHOICE}p")
+        if [ -n "${SELECTED_TAG}" ]; then
+            DYNAMO_IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BASE_ECR_REPOSITORY}:${SELECTED_TAG}"
+            export DYNAMO_IMAGE
+            success "Using existing image: ${DYNAMO_IMAGE}"
+        else
+            error "Invalid selection"
+            exit 1
+        fi
+    else
+        warn "No existing images found in ECR repository: ${BASE_ECR_REPOSITORY}"
+        error ""
+        error "You need to build a base image first. Please run:"
+        error "  cd ${SCRIPT_DIR}"
+        error "  ./build-base-image.sh vllm --push"
+        error ""
+        error "After the build completes, the environment file will be updated automatically."
+        error "Then you can re-run this deployment script."
+        exit 1
+    fi
 fi
+
+success "Using DYNAMO_IMAGE: ${DYNAMO_IMAGE}"
 
 # Build the service using the target determined from selection
 info "Building ${BUILD_TARGET} service for Dynamo Cloud deployment..."
@@ -373,25 +443,6 @@ info "Created monitoring config directory: ${CONFIG_DIR}"
 # Create Service + ServiceMonitor for frontend
 info "Creating Service and ServiceMonitor configuration..."
 cat > "${CONFIG_DIR}/dynamo-frontend-service-monitor.yaml" << EOF
-# Service for frontend - exposes the actual application port (${APP_PORT}) for both app logic and metrics
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${DEPLOYMENT_NAME}-frontend-app
-  namespace: ${NAMESPACE}
-  labels:
-    app: ${DEPLOYMENT_NAME}-frontend
-    dynamo.ai/monitoring-type: metrics
-    nvidia.com/selector: ${DEPLOYMENT_NAME}-frontend-app
-spec:
-  ports:
-  - name: app
-    port: ${APP_PORT}
-    targetPort: ${APP_PORT}
-    protocol: TCP
-  selector:
-    nvidia.com/selector: ${DEPLOYMENT_NAME}-frontend
----
 # ServiceMonitor for frontend metrics
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -405,7 +456,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      nvidia.com/selector: ${DEPLOYMENT_NAME}-frontend-app
+      nvidia.com/selector: ${DEPLOYMENT_NAME}-frontend
   namespaceSelector:
     matchNames:
       - ${NAMESPACE}
@@ -423,7 +474,7 @@ if kubectl get namespace monitoring &>/dev/null; then
     success "Frontend Service + ServiceMonitor created successfully."
 
     info "Monitoring configured with service-based approach:"
-    info "- Service: ${DEPLOYMENT_NAME}-frontend-app on port ${APP_PORT}"
+    info "- Service: ${DEPLOYMENT_NAME}-frontend on port ${APP_PORT}"
     info "- ServiceMonitor: ${DEPLOYMENT_NAME}-frontend-service-metrics"
     info "Frontend app service provides clean access to both LLM calls and metrics endpoint."
 else

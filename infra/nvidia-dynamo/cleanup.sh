@@ -81,9 +81,184 @@ if aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} >/dev/
     info "Updating kubeconfig for cluster: ${CLUSTER_NAME}"
     aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
     
-    # Remove Dynamo namespace and all resources
-    info "Removing Dynamo namespace and resources..."
-    kubectl delete namespace ${NAMESPACE} --ignore-not-found=true
+    # Remove Dynamo deployments using dynamo CLI first
+    info "Removing Dynamo deployments using dynamo CLI..."
+
+    # Set up environment for dynamo CLI
+    BLUEPRINT_DIR="${SCRIPT_DIR}/../../blueprints/inference/nvidia-dynamo"
+    DYNAMO_VENV="${BLUEPRINT_DIR}/dynamo_venv"
+    echo "DYNAMO_VENV: ${DYNAMO_VENV}"
+
+    if [ -d "${DYNAMO_VENV}" ] && [ -f "${DYNAMO_VENV}/bin/activate" ]; then
+        info "Activating Dynamo virtual environment..."
+        source "${DYNAMO_VENV}/bin/activate"
+
+        # Set up DYNAMO_CLOUD endpoint for API access
+        info "Setting up Dynamo Cloud endpoint..."
+        DYNAMO_STORE_SERVICE=""
+        if kubectl get svc -n "${NAMESPACE}" dynamo-store >/dev/null 2>&1; then
+            DYNAMO_STORE_SERVICE="dynamo-store"
+        elif kubectl get svc -n "${NAMESPACE}" dynamo-cloud-dynamo-api-store >/dev/null 2>&1; then
+            DYNAMO_STORE_SERVICE="dynamo-cloud-dynamo-api-store"
+        fi
+
+        if [ -n "$DYNAMO_STORE_SERVICE" ]; then
+            info "Found Dynamo store service: ${DYNAMO_STORE_SERVICE}"
+
+            # Start port-forward in background
+            info "Starting port-forward for Dynamo API access..."
+            kubectl port-forward svc/${DYNAMO_STORE_SERVICE} 8080:80 -n ${NAMESPACE} >/dev/null 2>&1 &
+            PORT_FORWARD_PID=$!
+            export DYNAMO_CLOUD="http://localhost:8080"
+
+            # Wait for port-forward to be ready
+            sleep 5
+
+            # List and delete all deployments
+            info "Listing Dynamo deployments..."
+            if command -v dynamo >/dev/null 2>&1; then
+                # Get the raw output from dynamo deployment list
+                DEPLOYMENT_OUTPUT=$(dynamo deployment list --endpoint "${DYNAMO_CLOUD}" 2>/dev/null || echo "")
+
+                if [ -n "${DEPLOYMENT_OUTPUT}" ]; then
+                    info "Raw deployment list output:"
+                    echo "${DEPLOYMENT_OUTPUT}"
+
+                    # Extract deployment names using regex to handle pretty-printed box format
+                    # Look for lines with "Name: <deployment-name>" pattern
+                    DEPLOYMENTS=$(echo "${DEPLOYMENT_OUTPUT}" | \
+                        grep -E "^\s*│\s*Name:\s+" | \
+                        sed -E 's/^\s*│\s*Name:\s+([a-zA-Z0-9][a-zA-Z0-9_-]*)\s*.*$/\1/' | \
+                        grep -E "^[a-zA-Z0-9][a-zA-Z0-9_-]*$" || echo "")
+
+                    if [ -n "${DEPLOYMENTS}" ]; then
+                        info "Found deployments to delete:"
+                        echo "${DEPLOYMENTS}"
+
+                        for deployment in ${DEPLOYMENTS}; do
+                            info "Deleting Dynamo deployment: ${deployment}"
+                            dynamo deployment delete "${deployment}" --endpoint "${DYNAMO_CLOUD}" || warn "Failed to delete deployment: ${deployment}"
+                        done
+
+                        # Wait for deployments to be cleaned up
+                        info "Waiting for deployments to be cleaned up..."
+                        sleep 10
+                    else
+                        info "No valid deployment names found in output"
+                    fi
+                else
+                    info "No Dynamo deployments found or command failed"
+                fi
+            else
+                warn "Dynamo CLI not found in virtual environment"
+            fi
+
+            # Kill port-forward
+            if [ -n "${PORT_FORWARD_PID}" ]; then
+                kill ${PORT_FORWARD_PID} 2>/dev/null || true
+            fi
+        else
+            warn "No Dynamo store service found, skipping deployment deletion"
+        fi
+
+        # Deactivate virtual environment
+        deactivate 2>/dev/null || true
+    else
+        warn "Dynamo virtual environment not found, skipping deployment deletion"
+    fi
+
+    # Now patch finalizers on Dynamo custom resources to prevent hanging
+    info "Patching finalizers on Dynamo custom resources..."
+
+    # Get all Dynamo custom resources in the namespace
+    DYNAMO_CRS=(
+        "dynamocomponentdeployments"
+        "dynamocomponents"
+        "dynamographdeployments"
+    )
+
+    for cr_type in "${DYNAMO_CRS[@]}"; do
+        info "Processing ${cr_type}..."
+        # Get all resources of this type in the namespace
+        CR_NAMES=$(kubectl get ${cr_type} -n ${NAMESPACE} --no-headers -o custom-columns=":metadata.name" 2>/dev/null || echo "")
+
+        if [ -n "${CR_NAMES}" ]; then
+            for cr_name in ${CR_NAMES}; do
+                info "Removing finalizers from ${cr_type}/${cr_name}..."
+                if kubectl get ${cr_type} ${cr_name} -n ${NAMESPACE} >/dev/null 2>&1; then
+                    kubectl patch ${cr_type} ${cr_name} -n ${NAMESPACE} --type='merge' -p='{"metadata":{"finalizers":null}}' || warn "Failed to patch finalizers on ${cr_type}/${cr_name}"
+                else
+                    info "Resource ${cr_type}/${cr_name} not found, skipping"
+                fi
+            done
+        else
+            info "No ${cr_type} found in namespace ${NAMESPACE}"
+        fi
+    done
+
+    # Wait a moment for finalizer patches to take effect
+    info "Waiting for finalizer patches to take effect..."
+    sleep 5
+    
+    # Delete the namespace first to avoid pod disruption budget issues
+    info "Deleting namespace ${NAMESPACE}..."
+    kubectl delete namespace ${NAMESPACE} --ignore-not-found=true --timeout=300s || warn "Namespace deletion timed out, continuing with cleanup"
+
+    # Wait for namespace deletion to complete
+    info "Waiting for namespace deletion to complete..."
+    for i in {1..30}; do
+        if ! kubectl get namespace ${NAMESPACE} >/dev/null 2>&1; then
+            success "Namespace ${NAMESPACE} deleted successfully"
+            break
+        fi
+        if [ $i -eq 30 ]; then
+            warn "Namespace deletion taking longer than expected, continuing with cleanup"
+        else
+            info "Waiting for namespace deletion... ($i/30)"
+            sleep 10
+        fi
+    done
+
+    # Now drain and delete Karpenter-managed nodes
+    info "Draining and deleting Karpenter-managed nodes..."
+
+    # Get all nodes managed by Karpenter
+    KARPENTER_NODES=$(kubectl get nodes -l karpenter.sh/provisioner-name --no-headers -o custom-columns=":metadata.name" 2>/dev/null || echo "")
+    if [ -z "${KARPENTER_NODES}" ]; then
+        # Try alternative label format for newer Karpenter versions
+        KARPENTER_NODES=$(kubectl get nodes -l karpenter.sh/nodepool --no-headers -o custom-columns=":metadata.name" 2>/dev/null || echo "")
+    fi
+
+    if [ -n "${KARPENTER_NODES}" ]; then
+        for node in ${KARPENTER_NODES}; do
+            info "Draining node: ${node}"
+            kubectl drain ${node} --ignore-daemonsets --delete-emptydir-data --force --timeout=300s || warn "Failed to drain node: ${node}"
+
+            info "Deleting node: ${node}"
+            kubectl delete node ${node} --timeout=60s || warn "Failed to delete node: ${node}"
+        done
+
+        # Wait for nodes to be fully terminated
+        info "Waiting for nodes to be terminated..."
+        sleep 30
+    else
+        info "No Karpenter-managed nodes found"
+    fi
+
+    # Also force delete any stuck NodeClaims
+    info "Cleaning up Karpenter NodeClaims..."
+    NODECLAIMS=$(kubectl get nodeclaims --no-headers -o custom-columns=":metadata.name" 2>/dev/null || echo "")
+    if [ -n "${NODECLAIMS}" ]; then
+        for nodeclaim in ${NODECLAIMS}; do
+            info "Removing finalizers from NodeClaim: ${nodeclaim}"
+            kubectl patch nodeclaim ${nodeclaim} --type='merge' -p='{"metadata":{"finalizers":null}}' 2>/dev/null || true
+
+            info "Deleting NodeClaim: ${nodeclaim}"
+            kubectl delete nodeclaim ${nodeclaim} --timeout=60s || warn "Failed to delete NodeClaim: ${nodeclaim}"
+        done
+    else
+        info "No NodeClaims found"
+    fi
     
     # Remove any Dynamo CRDs
     info "Removing Dynamo Custom Resource Definitions..."
@@ -148,7 +323,7 @@ if [ -d "${TERRAFORM_DIR}" ]; then
     
     # Initialize terraform
     info "Initializing Terraform..."
-    terraform init -upgrade
+    terraform init
     
     # Destroy infrastructure
     info "Destroying Terraform infrastructure..."

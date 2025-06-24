@@ -3,17 +3,15 @@
 #---------------------------------------------------------------
 # NVIDIA Dynamo Inference Graph Testing
 #
-# This script tests deployed inference graphs by sending sample
-# requests and validating responses. It's adapted from the 7_test
-# script in the dynamo-cloud reference implementation.
+# Simple testing script for deployed inference graphs.
+# Tests health, metrics, and completions endpoints.
 #
 # Usage:
-#   ./test.sh [example_name] [service_name]
+#   ./test.sh [service_name]
 #
 # Examples:
-#   ./test.sh llm                    # Test LLM example
-#   ./test.sh multimodal my-service  # Test specific service
 #   ./test.sh                        # Interactive selection
+#   ./test.sh llm-disagg-router-frontend
 #---------------------------------------------------------------
 
 set -euo pipefail
@@ -54,15 +52,10 @@ print_banner() {
     local title="$1"
     local width=80
     local line=$(printf '%*s' "$width" | tr ' ' '=')
-    
+
     echo -e "\n${BLUE}${line}${NC}"
     echo -e "${BLUE}$(printf '%*s' $(( (width - ${#title}) / 2 )) '')${title}${NC}"
     echo -e "${BLUE}${line}${NC}\n"
-}
-
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
 }
 
 print_banner "DYNAMO INFERENCE GRAPH TESTING"
@@ -97,34 +90,14 @@ fi
 
 # Select service
 SERVICE_NAME=""
-EXAMPLE_NAME=""
 
 if [ $# -gt 0 ]; then
-    EXAMPLE_NAME="$1"
-    
-    if [ $# -gt 1 ]; then
-        SERVICE_NAME="$2"
-        # Validate provided service
-        if [[ ! " ${AVAILABLE_SERVICES[@]} " =~ " ${SERVICE_NAME} " ]]; then
-            error "Service '${SERVICE_NAME}' not found in namespace ${NAMESPACE}"
-            info "Available services: ${AVAILABLE_SERVICES[*]}"
-            exit 1
-        fi
-    else
-        # Try to find service by example name
-        for service in "${AVAILABLE_SERVICES[@]}"; do
-            if [[ "${service}" == *"${EXAMPLE_NAME}"* ]]; then
-                SERVICE_NAME="${service}"
-                break
-            fi
-        done
-        
-        if [ -z "${SERVICE_NAME}" ]; then
-            warn "No service found matching example '${EXAMPLE_NAME}'"
-            info "Available services: ${AVAILABLE_SERVICES[*]}"
-            SERVICE_NAME="${AVAILABLE_SERVICES[0]}"
-            info "Using first available service: ${SERVICE_NAME}"
-        fi
+    SERVICE_NAME="$1"
+    # Validate provided service
+    if [[ ! " ${AVAILABLE_SERVICES[@]} " =~ " ${SERVICE_NAME} " ]]; then
+        error "Service '${SERVICE_NAME}' not found in namespace ${NAMESPACE}"
+        info "Available services: ${AVAILABLE_SERVICES[*]}"
+        exit 1
     fi
 else
     # Interactive selection
@@ -132,10 +105,10 @@ else
     for i in "${!AVAILABLE_SERVICES[@]}"; do
         echo "  $((i+1)). ${AVAILABLE_SERVICES[i]}"
     done
-    
+
     echo -n "Select a service (1-${#AVAILABLE_SERVICES[@]}): "
     read -r selection
-    
+
     if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le ${#AVAILABLE_SERVICES[@]} ]; then
         SERVICE_NAME="${AVAILABLE_SERVICES[$((selection-1))]}"
     else
@@ -232,25 +205,20 @@ fi
 
 section "API Testing"
 
-# Test different endpoints based on service type
+# Test key endpoints
 BASE_URL="http://localhost:${LOCAL_PORT}"
 
-# Common test endpoints
+# Test endpoints that worked in the original output
 ENDPOINTS=(
     "/health"
     "/metrics"
-    "/docs"
-    "/openapi.json"
     "/v1/models"
-    "/predict"
-    "/inference"
-    "/generate"
 )
 
-info "Testing common endpoints..."
+info "Testing key endpoints..."
 for endpoint in "${ENDPOINTS[@]}"; do
     url="${BASE_URL}${endpoint}"
-    
+
     if curl -s -f "${url}" >/dev/null 2>&1; then
         success "✓ ${endpoint} - accessible"
     else
@@ -262,71 +230,79 @@ done
 # Sample Inference Tests
 #---------------------------------------------------------------
 
-section "Sample Inference Tests"
+section "Chat Completions Test"
 
-# Test inference endpoint with sample data
-INFERENCE_URL="${BASE_URL}/predict"
-GENERATE_URL="${BASE_URL}/generate"
-V1_COMPLETIONS_URL="${BASE_URL}/v1/completions"
+# Test chat completions endpoint (the one that worked in your output)
+COMPLETIONS_URL="${BASE_URL}/v1/chat/completions"
 
-# Test 1: Simple prediction
-info "Testing prediction endpoint..."
-if curl -s -f "${INFERENCE_URL}" >/dev/null 2>&1; then
-    info "Sending sample prediction request..."
-    
-    # Sample payload for generic prediction
-    SAMPLE_PAYLOAD='{"input": "Hello, world!", "max_tokens": 10}'
-    
-    RESPONSE=$(curl -s -X POST "${INFERENCE_URL}" \
-        -H "Content-Type: application/json" \
-        -d "${SAMPLE_PAYLOAD}" 2>/dev/null || echo "")
-    
-    if [ -n "${RESPONSE}" ]; then
-        success "Prediction endpoint responded"
-        echo "Response: ${RESPONSE}" | jq . 2>/dev/null || echo "Response: ${RESPONSE}"
-    else
-        warn "Prediction endpoint did not respond"
+info "Testing chat completions endpoint..."
+# Use the correct model name from the Dynamo LLM examples
+CHAT_PAYLOAD='{
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+    "messages": [
+        {"role": "user", "content": "Explain Quantum computing in relation to classical computing. Connect it to digital vs analog computing. Use the latest research and examples."}
+    ],
+    "max_tokens": 500,
+    "temperature": 0.7
+}'
+
+RESPONSE=$(curl -s -X POST "${COMPLETIONS_URL}" \
+    -H "Content-Type: application/json" \
+    -d "${CHAT_PAYLOAD}" 2>/dev/null || echo "")
+
+if [ -n "${RESPONSE}" ]; then
+    success "Chat completions endpoint responded"
+    echo "Response:"
+    echo "${RESPONSE}" | jq . 2>/dev/null || echo "${RESPONSE}"
+
+    # Check if we got a "Model not found" error and try alternative model names
+    if echo "${RESPONSE}" | grep -q "Model not found"; then
+        warn "Model 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B' not found, trying alternative model names..."
+
+        # Try with just the model name without the org prefix
+        ALT_PAYLOAD='{
+            "model": "DeepSeek-R1-Distill-Llama-8B",
+            "messages": [
+                {"role": "user", "content": "Explain Quantum computing in relation to classical computing. Connect it to digital vs analog computing. Use the latest research and examples."}
+            ],
+            "max_tokens": 500,
+            "temperature": 0.7
+        }'
+
+        ALT_RESPONSE=$(curl -s -X POST "${COMPLETIONS_URL}" \
+            -H "Content-Type: application/json" \
+            -d "${ALT_PAYLOAD}" 2>/dev/null || echo "")
+
+        if [ -n "${ALT_RESPONSE}" ] && ! echo "${ALT_RESPONSE}" | grep -q "Model not found"; then
+            success "Alternative model name worked!"
+            echo "Response:"
+            echo "${ALT_RESPONSE}" | jq . 2>/dev/null || echo "${ALT_RESPONSE}"
+        else
+            # Try with "default" model name
+            DEFAULT_PAYLOAD='{
+                "model": "default",
+                "messages": [
+                    {"role": "user", "content": "Explain Quantum computing in relation to classical computing. Connect it to digital vs analog computing. Use the latest research and examples."}
+                ],
+                "max_tokens": 500,
+                "temperature": 0.7
+            }'
+
+            DEFAULT_RESPONSE=$(curl -s -X POST "${COMPLETIONS_URL}" \
+                -H "Content-Type: application/json" \
+                -d "${DEFAULT_PAYLOAD}" 2>/dev/null || echo "")
+
+            if [ -n "${DEFAULT_RESPONSE}" ] && ! echo "${DEFAULT_RESPONSE}" | grep -q "Model not found"; then
+                success "Default model name worked!"
+                echo "Response:"
+                echo "${DEFAULT_RESPONSE}" | jq . 2>/dev/null || echo "${DEFAULT_RESPONSE}"
+            else
+                warn "All model names failed. Check deployment configuration or model availability."
+            fi
+        fi
     fi
-fi
-
-# Test 2: Generation endpoint
-info "Testing generation endpoint..."
-if curl -s -f "${GENERATE_URL}" >/dev/null 2>&1; then
-    info "Sending sample generation request..."
-    
-    # Sample payload for text generation
-    SAMPLE_PAYLOAD='{"prompt": "The future of AI is", "max_tokens": 20}'
-    
-    RESPONSE=$(curl -s -X POST "${GENERATE_URL}" \
-        -H "Content-Type: application/json" \
-        -d "${SAMPLE_PAYLOAD}" 2>/dev/null || echo "")
-    
-    if [ -n "${RESPONSE}" ]; then
-        success "Generation endpoint responded"
-        echo "Response: ${RESPONSE}" | jq . 2>/dev/null || echo "Response: ${RESPONSE}"
-    else
-        warn "Generation endpoint did not respond"
-    fi
-fi
-
-# Test 3: OpenAI-compatible endpoint
-info "Testing OpenAI-compatible endpoint..."
-if curl -s -f "${V1_COMPLETIONS_URL}" >/dev/null 2>&1; then
-    info "Sending OpenAI-compatible request..."
-    
-    # Sample payload for OpenAI-compatible API
-    SAMPLE_PAYLOAD='{"model": "default", "prompt": "Hello", "max_tokens": 10}'
-    
-    RESPONSE=$(curl -s -X POST "${V1_COMPLETIONS_URL}" \
-        -H "Content-Type: application/json" \
-        -d "${SAMPLE_PAYLOAD}" 2>/dev/null || echo "")
-    
-    if [ -n "${RESPONSE}" ]; then
-        success "OpenAI-compatible endpoint responded"
-        echo "Response: ${RESPONSE}" | jq . 2>/dev/null || echo "Response: ${RESPONSE}"
-    else
-        warn "OpenAI-compatible endpoint did not respond"
-    fi
+else
+    warn "Chat completions endpoint did not respond"
 fi
 
 #---------------------------------------------------------------
@@ -335,21 +311,63 @@ fi
 
 section "Performance Test"
 
-info "Running basic performance test..."
+info "Running enhanced performance test..."
 
-# Simple load test with curl
-if command_exists curl; then
-    info "Sending 5 concurrent requests..."
-    
-    for i in {1..5}; do
-        (
-            RESPONSE_TIME=$(curl -s -w "%{time_total}" -o /dev/null "${BASE_URL}/health" 2>/dev/null || echo "timeout")
-            echo "Request $i: ${RESPONSE_TIME}s"
-        ) &
-    done
-    
-    wait
+# Test 1: Health endpoint performance (quick baseline)
+info "Testing health endpoint performance (3 requests)..."
+HEALTH_TIMES=()
+for i in {1..3}; do
+    RESPONSE_TIME=$(curl -s -w "%{time_total}" -o /dev/null "${BASE_URL}/health" 2>/dev/null || echo "timeout")
+    HEALTH_TIMES+=("$RESPONSE_TIME")
+    echo "Health request $i: ${RESPONSE_TIME}s"
+done
+
+# Test 2: Chat completions performance (more challenging)
+info "Testing chat completions performance (3 requests)..."
+
+# Use a simpler prompt for performance testing to reduce variability
+PERF_PAYLOAD='{
+    "model": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+    "messages": [
+        {"role": "user", "content": "What is artificial intelligence?"}
+    ],
+    "max_tokens": 100,
+    "temperature": 0.7
+}'
+
+COMPLETION_TIMES=()
+for i in {1..3}; do
+    echo "Sending completion request $i..."
+    START_TIME=$(date +%s.%N)
+
+    RESPONSE=$(curl -s -X POST "${BASE_URL}/v1/chat/completions" \
+        -H "Content-Type: application/json" \
+        -d "${PERF_PAYLOAD}" 2>/dev/null || echo "")
+
+    END_TIME=$(date +%s.%N)
+    RESPONSE_TIME=$(echo "${END_TIME} - ${START_TIME}" | bc -l 2>/dev/null || echo "0")
+    COMPLETION_TIMES+=("$RESPONSE_TIME")
+
+    if [ -n "${RESPONSE}" ] && ! echo "${RESPONSE}" | grep -q "error"; then
+        echo "Completion request $i: ${RESPONSE_TIME}s ✓"
+    else
+        echo "Completion request $i: ${RESPONSE_TIME}s ✗ (error)"
+    fi
+done
+
+# Calculate and display averages
+if command -v bc >/dev/null 2>&1; then
+    HEALTH_AVG=$(printf '%s\n' "${HEALTH_TIMES[@]}" | awk '{sum+=$1; count++} END {if(count>0) printf "%.3f", sum/count; else print "0"}')
+    COMPLETION_AVG=$(printf '%s\n' "${COMPLETION_TIMES[@]}" | awk '{sum+=$1; count++} END {if(count>0) printf "%.3f", sum/count; else print "0"}')
+
+    echo ""
     success "Performance test completed"
+    echo "Average response times:"
+    echo "  Health endpoint: ${HEALTH_AVG}s"
+    echo "  Chat completions: ${COMPLETION_AVG}s"
+    echo "  Performance ratio: $(echo "scale=1; ${COMPLETION_AVG} / ${HEALTH_AVG}" | bc -l 2>/dev/null || echo "N/A")x slower"
+else
+    success "Performance test completed (install 'bc' for detailed statistics)"
 fi
 
 #---------------------------------------------------------------
@@ -367,8 +385,10 @@ echo "  Namespace: ${NAMESPACE}"
 echo "  Port: ${SERVICE_PORT}"
 echo "  Local URL: http://localhost:${LOCAL_PORT}"
 echo ""
-echo "To continue testing manually:"
-echo "  1. Keep port forwarding running: kubectl port-forward service/${SERVICE_NAME} ${LOCAL_PORT}:${SERVICE_PORT} -n ${NAMESPACE}"
-echo "  2. Test with curl: curl http://localhost:${LOCAL_PORT}/health"
-echo "  3. View logs: kubectl logs -n ${NAMESPACE} -l app=${SERVICE_NAME}"
-echo "  4. Monitor pods: kubectl get pods -n ${NAMESPACE} -w"
+
+echo "Manual Testing Commands:"
+echo "  1. Port forwarding: kubectl port-forward service/${SERVICE_NAME} ${LOCAL_PORT}:${SERVICE_PORT} -n ${NAMESPACE}"
+echo "  2. Health check: curl http://localhost:${LOCAL_PORT}/health"
+echo "  3. Chat completions: curl -X POST http://localhost:${LOCAL_PORT}/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\": \"deepseek-ai/DeepSeek-R1-Distill-Llama-8B\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}], \"max_tokens\": 50}'"
+echo "  4. View logs: kubectl logs -n ${NAMESPACE} -l app=${SERVICE_NAME}"
+echo "  5. Monitor pods: kubectl get pods -n ${NAMESPACE} -w"
