@@ -613,5 +613,5 @@ Destroy the EKS Cluster and resources
 ```bash
 cd ai-on-eks/infra/trainium-inferentia/terraform/_LOCAL
 
-./../../../base/terraform/cleanup.sh
+./cleanup.sh
 ```
