@@ -611,7 +611,7 @@ kubectl delete -f vllm-rayserve-deployment.yaml
 Destroy the EKS Cluster and resources
 
 ```bash
-cd ai-on-eks/infra/trainium-inferentia/
+cd ai-on-eks/infra/trainium-inferentia/terraform/_LOCAL
 
-./cleanup.sh
+./../../../base/terraform/cleanup.sh
 ```
