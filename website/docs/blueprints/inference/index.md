@@ -17,12 +17,6 @@ Get started quickly with our pre-configured Helm charts that support multiple mo
 - Includes VLLM and Ray-VLLM frameworks
 - Pre-configured for 10+ popular models including Llama, DeepSeek, and Mistral
 
-### 📋 Step-by-Step Guides
-For detailed understanding and custom configurations:
-
-- **[From Testing to Production](./step-by-step/)** - Comprehensive guide covering the journey from testing to production
-- **[Testing and Benchmarking](./step-by-step/testing.md)** - Performance evaluation and testing strategies
-
 ## Hardware-Specific Guides
 
 ### GPU Deployments
@@ -58,11 +52,11 @@ AI on EKS inference solutions support multiple deployment patterns:
 
 ## Choosing the Right Approach
 
-| Use Case | Recommended Solution | Benefits |
-|----------|---------------------|----------|
-| **Quick prototyping** | [Inference Charts](./inference-charts.md) | Pre-configured, fast deployment |
-| **GPU** | [GPU-specific guides](./GPUs/) | GPU-based inference |
-| **Neuron** | [Neuron guides](./Neuron/) | Inferentia-based inference |
+| Use Case | Recommended Solution                                       | Benefits |
+|----------|------------------------------------------------------------|----------|
+| **Quick prototyping** | [Inference Charts](./inference-charts.md)                  | Pre-configured, fast deployment |
+| **GPU** | [GPU-specific guides](/docs/category/gpu-inference-on-eks) | GPU-based inference |
+| **Neuron** | [Neuron guides](/docs/category/neuron-inference-on-eks)   | Inferentia-based inference |
 
 ## Next Steps
 

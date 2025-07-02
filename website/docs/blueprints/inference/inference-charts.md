@@ -244,5 +244,5 @@ kubectl exec -it <ray-head-pod> -- ray status
 
 ## Next Steps
 
-- Explore [GPU-specific configurations](./GPUs/) for GPU deployments
-- Learn about [Neuron-specific configurations](./Neuron/) for Inferentia deployments
+- Explore [GPU-specific configurations](/docs/category/gpu-inference-on-eks) for GPU deployments
+- Learn about [Neuron-specific configurations](/docs/category/neuron-inference-on-eks) for Inferentia deployments
