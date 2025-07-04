@@ -213,7 +213,7 @@ module "data_addons" {
   #---------------------------------------
   enable_kuberay_operator = var.enable_kuberay_operator
   kuberay_operator_helm_config = {
-    version = "1.1.1"
+    version = "1.4.0"
     # Enabling Volcano as Batch scheduler for KubeRay Operator
     values = [
       <<-EOT
