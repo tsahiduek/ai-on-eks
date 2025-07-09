@@ -274,4 +274,35 @@ variable "dynamo_stack_version" {
   default     = "v0.3.0"
 }
 
+# Karpenter node pool weights
+variable "karpenter_g6_weight" {
+  description = "Weight for G6 GPU node pool"
+  type        = number
+  default     = 100
+}
+
+variable "karpenter_g5_weight" {
+  description = "Weight for G5 GPU node pool"
+  type        = number
+  default     = 100
+}
+
+variable "karpenter_m5_weight" {
+  description = "Weight for M5 CPU node pool"
+  type        = number
+  default     = 100
+}
+
+variable "karpenter_p5_weight" {
+  description = "Weight for P5 GPU node pool"
+  type        = number
+  default     = 100
+}
+
+variable "karpenter_p4_weight" {
+  description = "Weight for P4 GPU node pool"
+  type        = number
+  default     = 100
+}
+
 

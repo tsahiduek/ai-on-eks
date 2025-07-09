@@ -380,7 +380,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 50
+        weight: ${var.karpenter_g6_weight}
       EOT
       ]
     }
@@ -444,7 +444,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 50
+        weight: ${var.karpenter_g5_weight}
       EOT
       ]
     }
@@ -501,7 +501,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 50
+        weight: ${var.karpenter_m5_weight}
       EOT
       ]
     }
@@ -560,7 +560,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 50
+        weight: ${var.karpenter_p5_weight}
       EOT
       ]
     }
@@ -617,7 +617,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 50
+        weight: ${var.karpenter_p4_weight}
       EOT
       ]
     }

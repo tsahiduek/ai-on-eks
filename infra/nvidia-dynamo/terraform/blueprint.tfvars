@@ -109,3 +109,17 @@ use_bottlerocket = false
 
 # Bottlerocket data disk snapshot for faster node startup
 # bottlerocket_data_disk_snapshot_id = "snap-xxxxxxxxx"
+
+# -------------------------------------------------------------------------------------
+# Karpenter Node Pool Weights Configuration
+#
+# Adjust weights to accommodate custom node pools for Dynamo workloads
+# Total weights across all pools should not exceed 100
+# -------------------------------------------------------------------------------------
+
+# Reduce base node pool weights to make room for custom pools
+karpenter_g6_weight = 30
+karpenter_g5_weight = 30
+karpenter_m5_weight = 30
+karpenter_p5_weight = 30
+karpenter_p4_weight = 30
