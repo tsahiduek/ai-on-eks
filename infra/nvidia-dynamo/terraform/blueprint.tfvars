@@ -80,15 +80,11 @@ enable_ai_ml_observability_stack = true
 # Dynamo Stack Configuration
 # -------------------------------------------------------------------------------------
 
-# Dynamo version to deploy (v0.3.0 with separate dependencies)
-dynamo_stack_version = "v0.3.0"
+# Dynamo version to deploy (v0.3.1 with separate dependencies)
+dynamo_stack_version = "v0.3.1"
 
 # Hugging Face token for model downloads (replace with your token)
 # huggingface_token = "your-huggingface-token-here"
-
-# For large language models (70B+ parameters)
-karpenter_cpu_limits    = 10000
-karpenter_memory_limits = 10000
 
 # -------------------------------------------------------------------------------------
 # Custom Karpenter Node Pools Configuration

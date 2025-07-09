@@ -150,7 +150,7 @@ info "Creating Dynamo environment configuration..."
 cat > "${ENV_FILE}" << EOF
 #!/bin/bash
 # Dynamo Environment Configuration for ai-on-eks
-export DYNAMO_REPO_VERSION="v0.3.0"
+export DYNAMO_REPO_VERSION="v0.3.1"
 export DYNAMO_FROM_SOURCE=false
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID}"
 export AWS_REGION="${AWS_REGION}"
@@ -201,7 +201,7 @@ source dynamo_venv/bin/activate
 # Upgrade pip and install dynamo
 info "Installing ai-dynamo[all] package..."
 pip install --upgrade pip
-pip install -U ai-dynamo[all]
+pip install -U ai-dynamo[all]==${DYNAMO_REPO_VERSION#v}
 pip install tensorboardX
 
 success "Dynamo Python package installed successfully"
@@ -381,7 +381,7 @@ if [ -f "deploy/helm/deploy.sh" ]; then
     info "- Pipeline image pushes: PIPELINES_DOCKER_USERNAME/PIPELINES_DOCKER_PASSWORD"
 
     # Run the deploy script
-    ./deploy.sh
+    ./deploy.sh --crds
 
     if [ $? -eq 0 ]; then
         success "Dynamo platform deployed successfully"

@@ -323,4 +323,86 @@ kubectl logs -n dynamo-cloud deployment/dynamo-api-store
 dynamo deployment list --endpoint "$DYNAMO_CLOUD"
 ```
 
+## Advanced Configuration
+
+### Custom Karpenter Node Pools
+
+This implementation includes custom Karpenter node pools optimized for NVIDIA Dynamo workloads with higher priority than base addons and BuildKit support.
+
+#### Features
+
+- **Higher Priority**: Weight 100 vs base addons weight 50 for Dynamo workload priority
+- **Dual AMI Support**: AL2023 (default) or Bottlerocket with user namespace configuration
+- **BuildKit Compatible**: Includes user namespace configuration for rootless BuildKit
+- **Optimized Instance Types**: C7i for CPU workloads, G6 for GPU workloads
+
+#### Node Pool Types
+
+**C7i CPU Node Pool:**
+- Instance Family: c7i (latest generation compute optimized)
+- Instance Sizes: large to 48xlarge
+- Use Cases: CPU-intensive workloads, BuildKit, general compute
+- Labels: `dynamo.ai/node-type: c7i-cpu`, `dynamo.ai/buildkit-compatible: true`
+
+**G6 GPU Node Pool:**
+- Instance Family: g6 (NVIDIA L4 GPUs)
+- Instance Sizes: large to 48xlarge
+- Use Cases: GPU workloads, ML inference, training
+- Labels: `dynamo.ai/node-type: g6-gpu`, `dynamo.ai/buildkit-compatible: true`, `accelerator: nvidia`, `gpuType: l4`
+- Taints: `nvidia.com/gpu=true:NoSchedule`
+
+#### Configuration Options
+
+The custom node pools can be configured in `infra/nvidia-dynamo/terraform/blueprint.tfvars`:
+
+```hcl
+# Enable custom node pools
+enable_custom_karpenter_nodepools = true
+
+# Choose AMI family (default: AL2023 - recommended)
+use_bottlerocket = false  # true for Bottlerocket with user namespaces
+
+# Resource limits (adjust based on workload needs)
+karpenter_cpu_limits = 10000
+karpenter_memory_limits = 10000
+```
+
+#### AMI Family Considerations
+
+**AL2023 (Default - Recommended):**
+- User namespaces enabled by default in kernel
+- Better compatibility for most workloads
+- Best for BuildKit and general use
+
+**Bottlerocket (Optional):**
+- Minimal attack surface, immutable OS
+- Custom configuration sets `user.max_user_namespaces = 16384`
+- Best for security-focused deployments
+
+#### Node Selection
+
+To schedule pods on specific custom nodes, use node selectors:
+
+```yaml
+# For C7i CPU nodes
+nodeSelector:
+  dynamo.ai/node-type: c7i-cpu
+  dynamo.ai/buildkit-compatible: "true"
+
+# For G6 GPU nodes  
+nodeSelector:
+  dynamo.ai/node-type: g6-gpu
+  dynamo.ai/buildkit-compatible: "true"
+```
+
+#### Verification
+
+After deployment, verify the custom node pools:
+
+```bash
+kubectl get nodepools
+kubectl get ec2nodeclasses
+kubectl get nodes --show-labels
+```
+
 For additional support, refer to the [NVIDIA Dynamo documentation](https://docs.nvidia.com/dynamo/) and the [ai-on-eks GitHub repository](https://github.com/awslabs/ai-on-eks).
