@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Inference on EKS
 
-AI on EKS provides comprehensive solutions for deploying AI/ML inference workloads on Amazon EKS, supporting both GPU and AWS Neuron (Inferentia) hardware configurations.
+AI on EKS provides comprehensive solutions for deploying AI/ML inference workloads on Amazon EKS, supporting both GPU and AWS Neuron (Inferentia/Trainium) hardware configurations.
 
 ## Quick Start Options
 
