@@ -5,7 +5,7 @@ sidebar_label: Inference Charts
 # AI on EKS Inference Charts
 
 The AI on EKS Inference Charts provide a streamlined Helm-based approach to deploy AI/ML inference workloads on both GPU
-and AWS Neuron (Inferentia) hardware. This chart supports multiple deployment configurations and comes with
+and AWS Neuron (Inferentia/Trainium) hardware. This chart supports multiple deployment configurations and comes with
 pre-configured values for popular models.
 
 ## Overview
@@ -21,7 +21,7 @@ The inference charts support the following deployment types:
 
 Before deploying the inference charts, ensure you have:
 
-- Kubernetes cluster with GPU or AWS Neuron nodes
+- Amazon EKS cluster with GPU or AWS Neuron nodes ([JARK-stack](../../infra/ai-ml/jark.md) for a quick start)
 - Helm 3.0+
 - For GPU deployments: NVIDIA device plugin installed
 - For Neuron deployments: AWS Neuron device plugin installed
@@ -31,7 +31,7 @@ Before deploying the inference charts, ensure you have:
 
 ### 1. Create Hugging Face Token Secret
 
-Create a Kubernetes secret with your Hugging Face token:
+Create a Kubernetes secret with your [Hugging Face token](https://huggingface.co/docs/hub/en/security-tokens):
 
 ```bash
 kubectl create secret generic hf-token --from-literal=token=your_huggingface_token
@@ -40,6 +40,14 @@ kubectl create secret generic hf-token --from-literal=token=your_huggingface_tok
 ### 2. Deploy a Pre-configured Model
 
 Choose from the available pre-configured models and deploy:
+
+:::warning
+
+These deployments will need GPU/Neuron resources which need to
+be [enabled](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html) and cost more than CPU only
+instances.
+
+:::
 
 ```bash
 # Deploy Llama 3.2 1B on GPU with VLLM
@@ -65,7 +73,7 @@ The inference charts include pre-configured values files for the following model
 | **Llama 4 Scout**             | 17B  | VLLM      | `values-llama-4-scout-17b-vllm.yaml`                    |
 | **Mistral Small**             | 24B  | Ray-VLLM  | `values-mistral-small-24b-ray-vllm.yaml`                |
 
-### Neuron Models (AWS Inferentia)
+### Neuron Models (AWS Inferentia/Trainium)
 
 | Model                         | Size | Framework | Values File                                            |
 |-------------------------------|------|-----------|--------------------------------------------------------|
