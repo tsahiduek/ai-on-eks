@@ -304,5 +304,3 @@ variable "karpenter_p4_weight" {
   type        = number
   default     = 100
 }
-
-

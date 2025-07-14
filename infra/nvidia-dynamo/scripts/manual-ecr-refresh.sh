@@ -53,7 +53,7 @@ print_banner() {
     local title="$1"
     local width=80
     local line=$(printf '%*s' "$width" | tr ' ' '=')
-    
+
     echo -e "\n${BLUE}${line}${NC}"
     echo -e "${BLUE}$(printf '%*s' $(( (width - ${#title}) / 2 )) '')${title}${NC}"
     echo -e "${BLUE}${line}${NC}\n"

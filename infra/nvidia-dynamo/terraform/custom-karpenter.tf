@@ -71,7 +71,7 @@ resource "kubectl_manifest" "dynamo_c7i_cpu_nodeclass" {
         AMIFamily   = local.ami_family
       })
       },
-      local.ami_config)
+    local.ami_config)
   })
 
   depends_on = [module.eks_blueprints_addons]
@@ -208,7 +208,7 @@ resource "kubectl_manifest" "dynamo_g6_gpu_nodeclass" {
         AMIFamily   = local.ami_family
       })
       },
-      local.ami_config)
+    local.ami_config)
   })
 
   depends_on = [module.eks_blueprints_addons]

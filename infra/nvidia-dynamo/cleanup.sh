@@ -50,7 +50,7 @@ print_banner() {
     local title="$1"
     local width=80
     local line=$(printf '%*s' "$width" | tr ' ' '=')
-    
+
     echo -e "\n${BLUE}${line}${NC}"
     echo -e "${BLUE}$(printf '%*s' $(( (width - ${#title}) / 2 )) '')${title}${NC}"
     echo -e "${BLUE}${line}${NC}\n"
@@ -80,7 +80,7 @@ info "Checking cluster connectivity..."
 if aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} >/dev/null 2>&1; then
     info "Updating kubeconfig for cluster: ${CLUSTER_NAME}"
     aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
-    
+
     # Remove Dynamo deployments using dynamo CLI first
     info "Removing Dynamo deployments using dynamo CLI..."
 
@@ -199,7 +199,7 @@ if aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} >/dev/
     # Wait a moment for finalizer patches to take effect
     info "Waiting for finalizer patches to take effect..."
     sleep 5
-    
+
     # Delete the namespace first to avoid pod disruption budget issues
     info "Deleting namespace ${NAMESPACE}..."
     kubectl delete namespace ${NAMESPACE} --ignore-not-found=true --timeout=300s || warn "Namespace deletion timed out, continuing with cleanup"
@@ -259,15 +259,15 @@ if aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} >/dev/
     else
         info "No NodeClaims found"
     fi
-    
+
     # Remove any Dynamo CRDs
     info "Removing Dynamo Custom Resource Definitions..."
     kubectl delete crd -l app.kubernetes.io/name=dynamo --ignore-not-found=true
-    
+
     # Remove any remaining Dynamo resources
     info "Cleaning up any remaining Dynamo resources..."
     kubectl delete all -l app.kubernetes.io/part-of=dynamo --all-namespaces --ignore-not-found=true
-    
+
     success "Dynamo platform cleanup completed"
 else
     warn "Cluster ${CLUSTER_NAME} not found or not accessible, skipping Kubernetes cleanup"
@@ -284,7 +284,7 @@ AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/de
 
 if [ -n "${AWS_ACCOUNT_ID}" ]; then
     info "Cleaning up ECR repositories..."
-    
+
     # List of ECR repositories to clean up
     ECR_REPOS=(
         "dynamo-operator"
@@ -292,7 +292,7 @@ if [ -n "${AWS_ACCOUNT_ID}" ]; then
         "dynamo-pipelines"
         "dynamo-base"
     )
-    
+
     for repo in "${ECR_REPOS[@]}"; do
         info "Checking ECR repository: ${repo}"
         if aws ecr describe-repositories --repository-names ${repo} --region ${AWS_REGION} >/dev/null 2>&1; then
@@ -302,7 +302,7 @@ if [ -n "${AWS_ACCOUNT_ID}" ]; then
             info "Repository ${repo} not found, skipping"
         fi
     done
-    
+
     success "ECR repository cleanup completed"
 else
     warn "Could not determine AWS account ID, skipping ECR cleanup"
@@ -320,18 +320,18 @@ TERRAFORM_DIR="${SCRIPT_DIR}/terraform/_LOCAL"
 if [ -d "${TERRAFORM_DIR}" ]; then
     info "Found terraform directory: ${TERRAFORM_DIR}"
     cd "${TERRAFORM_DIR}"
-    
+
     # Initialize terraform
     info "Initializing Terraform..."
     terraform init
-    
+
     # Destroy infrastructure
     info "Destroying Terraform infrastructure..."
     terraform destroy -auto-approve -var-file=../blueprint.tfvars
-    
+
     if [ $? -eq 0 ]; then
         success "Terraform infrastructure destroyed successfully"
-        
+
         # Clean up terraform directory
         info "Cleaning up terraform working directory..."
         cd "${SCRIPT_DIR}"
@@ -353,25 +353,25 @@ section "Phase 4: Blueprint Cleanup"
 
 if [ -d "${BLUEPRINT_DIR}" ]; then
     info "Cleaning up blueprint directory..."
-    
+
     # Remove virtual environment
     if [ -d "${BLUEPRINT_DIR}/dynamo_venv" ]; then
         info "Removing Python virtual environment..."
         rm -rf "${BLUEPRINT_DIR}/dynamo_venv"
     fi
-    
+
     # Remove dynamo repository
     if [ -d "${BLUEPRINT_DIR}/dynamo" ]; then
         info "Removing Dynamo repository clone..."
         rm -rf "${BLUEPRINT_DIR}/dynamo"
     fi
-    
+
     # Remove environment file
     if [ -f "${ENV_FILE}" ]; then
         info "Removing environment configuration..."
         rm -f "${ENV_FILE}"
     fi
-    
+
     success "Blueprint cleanup completed"
 else
     warn "Blueprint directory not found, skipping blueprint cleanup"
@@ -392,19 +392,19 @@ EFS_FILESYSTEMS=$(aws efs describe-file-systems --region ${AWS_REGION} --query "
 if [ -n "${EFS_FILESYSTEMS}" ]; then
     for fs_id in ${EFS_FILESYSTEMS}; do
         info "Found EFS file system: ${fs_id}"
-        
+
         # Delete mount targets first
         MOUNT_TARGETS=$(aws efs describe-mount-targets --file-system-id ${fs_id} --region ${AWS_REGION} --query "MountTargets[].MountTargetId" --output text 2>/dev/null || echo "")
-        
+
         for mt_id in ${MOUNT_TARGETS}; do
             info "Deleting mount target: ${mt_id}"
             aws efs delete-mount-target --mount-target-id ${mt_id} --region ${AWS_REGION} || warn "Failed to delete mount target: ${mt_id}"
         done
-        
+
         # Wait for mount targets to be deleted
         info "Waiting for mount targets to be deleted..."
         sleep 30
-        
+
         # Delete file system
         info "Deleting EFS file system: ${fs_id}"
         aws efs delete-file-system --file-system-id ${fs_id} --region ${AWS_REGION} || warn "Failed to delete EFS file system: ${fs_id}"

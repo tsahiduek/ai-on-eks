@@ -186,7 +186,7 @@ if curl -s -f "${HEALTH_URL}" >/dev/null 2>&1; then
 else
     warn "Health endpoint not accessible, trying root endpoint..."
     ROOT_URL="http://localhost:${LOCAL_PORT}/"
-    
+
     if curl -s -f "${ROOT_URL}" >/dev/null 2>&1; then
         success "Root endpoint is accessible"
         curl -s "${ROOT_URL}" | head -10

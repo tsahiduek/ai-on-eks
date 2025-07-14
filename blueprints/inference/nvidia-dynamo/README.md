@@ -765,69 +765,69 @@ cd infra/nvidia-dynamo
 
 The cleanup script handles proper resource removal in the correct order and is safer than using terraform destroy directly.
 
-Troubleshooting 
+Troubleshooting
 
-Common Issues 
+Common Issues
 
-    Image Pull Errors: 
+    Image Pull Errors:
 
-    Symptom: Pods stuck in ImagePullBackOff or ErrImagePull state 
+    Symptom: Pods stuck in ImagePullBackOff or ErrImagePull state
 
-    Cause: ECR access issues or misconfigured image pull secrets 
+    Cause: ECR access issues or misconfigured image pull secrets
 
-    Solution: Verify ECR access and secrets with kubectl describe pod <pod-name> 
+    Solution: Verify ECR access and secrets with kubectl describe pod <pod-name>
 
-    Fix: Recreate the image pull secret or check IAM permissions for the node role 
+    Fix: Recreate the image pull secret or check IAM permissions for the node role
 
-    Service Communication Issues: 
+    Service Communication Issues:
 
-    Symptom: Services unable to communicate with each other 
+    Symptom: Services unable to communicate with each other
 
-    Cause: Networking issues, misconfigured services, or Istio sidecar issues 
+    Cause: Networking issues, misconfigured services, or Istio sidecar issues
 
-    Solution: Check endpoints with kubectl get endpoints and service definitions 
+    Solution: Check endpoints with kubectl get endpoints and service definitions
 
-    Fix: Ensure services are correctly defined and Istio is properly configured 
+    Fix: Ensure services are correctly defined and Istio is properly configured
 
-    Worker Initialization Failures: 
+    Worker Initialization Failures:
 
-    Symptom: Pods stuck in Init:CrashLoopBackOff or CrashLoopBackOff state 
+    Symptom: Pods stuck in Init:CrashLoopBackOff or CrashLoopBackOff state
 
-    Cause: Configuration errors, resource constraints, or compatibility issues 
+    Cause: Configuration errors, resource constraints, or compatibility issues
 
-    Solution: Check logs with kubectl logs <pod-name> and events with kubectl describe pod <pod-name> 
+    Solution: Check logs with kubectl logs <pod-name> and events with kubectl describe pod <pod-name>
 
-    Fix: Address specific errors in the logs, adjust resource requests/limits, or update configurations 
+    Fix: Address specific errors in the logs, adjust resource requests/limits, or update configurations
 
-    Deployment Stuck in Pending State: 
+    Deployment Stuck in Pending State:
 
-    Symptom: Deployment shows as "pending" in dynamo deployment get output 
+    Symptom: Deployment shows as "pending" in dynamo deployment get output
 
-    Cause: Image builder issues, resource constraints, or operator problems 
+    Cause: Image builder issues, resource constraints, or operator problems
 
-    Solution: Check image builder logs and operator logs 
+    Solution: Check image builder logs and operator logs
 
-    Fix: Address specific errors in the logs or adjust resource configurations 
+    Fix: Address specific errors in the logs or adjust resource configurations
 
-Specific Troubleshooting Steps 
+Specific Troubleshooting Steps
 
-Dynamo Cloud Platform Issues 
+Dynamo Cloud Platform Issues
 
-Check Dynamo operator logs 
+Check Dynamo operator logs
 
-kubectl logs -f deployment/dynamo-operator -n dynamo-cloud 
+kubectl logs -f deployment/dynamo-operator -n dynamo-cloud
 
-Check Dynamo API store logs 
+Check Dynamo API store logs
 
-kubectl logs -f deployment/dynamo-api-store -n dynamo-cloud 
+kubectl logs -f deployment/dynamo-api-store -n dynamo-cloud
 
-Check image builder logs for a specific deployment 
+Check image builder logs for a specific deployment
 
-kubectl logs -f $(kubectl get pods -n dynamo-cloud -l app.kubernetes.io/component=image-builder,dynamo.nvidia.com/deployment-name= -o name) -n dynamo-cloud 
+kubectl logs -f $(kubectl get pods -n dynamo-cloud -l app.kubernetes.io/component=image-builder,dynamo.nvidia.com/deployment-name= -o name) -n dynamo-cloud
 
-Check events in the namespace 
+Check events in the namespace
 
-kubectl get events -n dynamo-cloud --sort-by='.lastTimestamp' 
+kubectl get events -n dynamo-cloud --sort-by='.lastTimestamp'
 
 ## Repository Information
 

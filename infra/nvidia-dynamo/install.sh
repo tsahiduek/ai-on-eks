@@ -51,7 +51,7 @@ print_banner() {
     local title="$1"
     local width=80
     local line=$(printf '%*s' "$width" | tr ' ' '=')
-    
+
     echo -e "\n${BLUE}${line}${NC}"
     echo -e "${BLUE}$(printf '%*s' $(( (width - ${#title}) / 2 )) '')${title}${NC}"
     echo -e "${BLUE}${line}${NC}\n"
@@ -213,7 +213,7 @@ if [ -d "dynamo" ]; then
     cd dynamo
     git fetch --tags
     git reset --hard
-    
+
     # Try to checkout the tag first, if it fails, try the branch
     if git tag -l | grep -q "^${DYNAMO_REPO_VERSION}$"; then
         info "Found tag ${DYNAMO_REPO_VERSION}, checking out..."
@@ -229,7 +229,7 @@ else
     git clone https://github.com/ai-dynamo/dynamo.git
     cd dynamo
     git fetch --tags
-    
+
     # Try to checkout the tag first, if it fails, try the branch
     if git tag -l | grep -q "^${DYNAMO_REPO_VERSION}$"; then
         info "Found tag ${DYNAMO_REPO_VERSION}, checking out..."
@@ -294,7 +294,7 @@ cd "${BLUEPRINT_DIR}"
 
 section "Phase 3.5: Image Build Engine Configuration"
 
-# Ask user about image build engine preference  
+# Ask user about image build engine preference
 info "Dynamo supports different image build engines:"
 info "  - kaniko (default): Rootless builds, enhanced security, works well with IRSA"
 info "  - buildkit: Fast, efficient, good compatibility"
@@ -306,10 +306,10 @@ if [[ "${USE_BUILDKIT,,}" =~ ^(y|yes)$ ]]; then
     info "Keeping buildkit build engine..."
 else
     info "Configuring Dynamo to use kaniko build engine..."
-    
+
     # Path to the dynamo-platform-values.yaml file
     VALUES_FILE="${BLUEPRINT_DIR}/dynamo/deploy/cloud/helm/dynamo-platform-values.yaml"
-    
+
     # Check if the file exists
     if [ -f "${VALUES_FILE}" ]; then
         # Update imageBuildEngine from buildkit to kaniko
@@ -345,22 +345,22 @@ cd "${BLUEPRINT_DIR}"
 
 if [ -n "$ECR_ROLE_ARN" ]; then
     info "Found IRSA role ARN: $ECR_ROLE_ARN"
-    
+
     # Path to the dynamo-platform-values.yaml file
     VALUES_FILE="${BLUEPRINT_DIR}/dynamo/deploy/cloud/helm/dynamo-platform-values.yaml"
-    
+
     if [ -f "${VALUES_FILE}" ]; then
         info "Configuring dynamo-platform-values.yaml for IRSA..."
-        
+
         # 1. Disable kubernetes secret usage
         sed -i 's/useKubernetesSecret: true/useKubernetesSecret: false/' "${VALUES_FILE}"
-        
+
         success "Disabled kubernetes secret usage in platform values"
         info "ECR access will be configured via IRSA after deployment"
-        
+
         # Update environment to skip ECR credential setup
         export SKIP_ECR_CREDENTIALS=true
-        
+
     else
         error "Values file not found: ${VALUES_FILE}"
         exit 1
@@ -403,11 +403,11 @@ if [ -f "deploy/helm/deploy.sh" ]; then
     if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ]; then
         info "Using IRSA for ECR access - skipping credential setup"
         info "Service accounts will authenticate to ECR using IAM roles"
-        
+
         # Still need to set these for the deploy script, but they won't be used by the pods
         export DOCKER_USERNAME="AWS"
         export DOCKER_PASSWORD="unused-with-irsa"
-        export PIPELINES_DOCKER_USERNAME="AWS" 
+        export PIPELINES_DOCKER_USERNAME="AWS"
         export PIPELINES_DOCKER_PASSWORD="unused-with-irsa"
     else
         # According to dynamo/docs/guides/dynamo_deploy/dynamo_cloud.md:
@@ -461,7 +461,7 @@ section "Phase 4.5: IRSA Configuration and ECR Access Setup"
 # Apply IRSA annotations after deployment to ensure ECR access works
 if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; then
     info "Configuring IRSA for ECR access after deployment..."
-    
+
     # Wait for Dynamo service accounts to be created
     info "Waiting for Dynamo service accounts to be ready..."
     for i in {1..60}; do
@@ -478,10 +478,10 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
             sleep 10
         fi
     done
-    
+
     # Apply IRSA annotations to all Dynamo service accounts
     info "Applying IRSA annotations for ECR access..."
-    
+
     # Controller manager service account
     if kubectl get serviceaccount dynamo-cloud-dynamo-operator-controller-manager -n ${NAMESPACE} >/dev/null 2>&1; then
         kubectl annotate serviceaccount dynamo-cloud-dynamo-operator-controller-manager -n ${NAMESPACE} eks.amazonaws.com/role-arn=${ECR_ROLE_ARN} --overwrite
@@ -489,7 +489,7 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
     else
         warn "Controller manager service account not found"
     fi
-    
+
     # Image builder service account
     if kubectl get serviceaccount dynamo-cloud-dynamo-operator-image-builder -n ${NAMESPACE} >/dev/null 2>&1; then
         kubectl annotate serviceaccount dynamo-cloud-dynamo-operator-image-builder -n ${NAMESPACE} eks.amazonaws.com/role-arn=${ECR_ROLE_ARN} --overwrite
@@ -497,7 +497,7 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
     else
         warn "Image builder service account not found"
     fi
-    
+
     # Component service account (if it exists)
     if kubectl get serviceaccount dynamo-cloud-dynamo-operator-component -n ${NAMESPACE} >/dev/null 2>&1; then
         kubectl annotate serviceaccount dynamo-cloud-dynamo-operator-component -n ${NAMESPACE} eks.amazonaws.com/role-arn=${ECR_ROLE_ARN} --overwrite
@@ -505,7 +505,7 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
     else
         info "Component service account not found (this is normal)"
     fi
-    
+
     # API Store service account
     if kubectl get serviceaccount dynamo-cloud-dynamo-api-store -n ${NAMESPACE} >/dev/null 2>&1; then
         kubectl annotate serviceaccount dynamo-cloud-dynamo-api-store -n ${NAMESPACE} eks.amazonaws.com/role-arn=${ECR_ROLE_ARN} --overwrite
@@ -513,19 +513,19 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
     else
         warn "API Store service account not found"
     fi
-    
+
     # Remove ECR credential secrets (not needed with IRSA)
     info "Cleaning up ECR credential secrets (not needed with IRSA)..."
     kubectl delete secret docker-imagepullsecret -n ${NAMESPACE} --ignore-not-found=true
     kubectl delete secret dynamo-regcred -n ${NAMESPACE} --ignore-not-found=true
     success "ECR credential secrets removed"
-    
+
     # Wait for all pods to be ready
     info "Waiting for all Dynamo pods to be ready..."
     for i in {1..60}; do
         READY_PODS=$(kubectl get pods -n ${NAMESPACE} --no-headers 2>/dev/null | grep -E "(Running|Completed)" | wc -l)
         TOTAL_PODS=$(kubectl get pods -n ${NAMESPACE} --no-headers 2>/dev/null | wc -l)
-        
+
         if [ "$READY_PODS" -eq "$TOTAL_PODS" ] && [ "$TOTAL_PODS" -gt 0 ]; then
             success "All $TOTAL_PODS Dynamo pods are ready"
             break
@@ -538,7 +538,7 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ] && [ -n "${ECR_ROLE_ARN:-}" ]; 
             sleep 10
         fi
     done
-    
+
     success "IRSA configuration completed - ECR access is now working with IAM roles"
 else
     info "Skipping IRSA configuration (using ECR credential rotation)"
@@ -620,7 +620,7 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ]; then
     echo "- Image build engine: kaniko (default, works best with IRSA)"
 else
     echo "- Using ECR credential rotation (legacy mode)"
-    echo "- Automatic refresh: CronJob runs every 6 hours" 
+    echo "- Automatic refresh: CronJob runs every 6 hours"
     echo "- Manual refresh: infra/nvidia-dynamo/scripts/manual-ecr-refresh.sh"
     echo "- Monitor status: kubectl get cronjob ecr-token-refresh -n ${NAMESPACE}"
 fi

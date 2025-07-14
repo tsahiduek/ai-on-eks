@@ -160,7 +160,7 @@ Before deploying any inference graphs, you must build and push the base images t
 cd blueprints/inference/nvidia-dynamo
 source dynamo_env.sh  # loads AWS_ACCOUNT_ID, AWS_REGION, IMAGE_TAG
 
-# Build and push for your preferred inference engine using any of these 
+# Build and push for your preferred inference engine using any of these
 ./build-base-image.sh vllm [tensorrtllm sglang] --push
 ```
 
@@ -389,7 +389,7 @@ nodeSelector:
   dynamo.ai/node-type: c7i-cpu
   dynamo.ai/buildkit-compatible: "true"
 
-# For G6 GPU nodes  
+# For G6 GPU nodes
 nodeSelector:
   dynamo.ai/node-type: g6-gpu
   dynamo.ai/buildkit-compatible: "true"

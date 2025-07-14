@@ -72,5 +72,3 @@ output "dynamo_ecr_role_arn" {
   description = "ARN of the IRSA role for Dynamo ECR access"
   value       = var.enable_dynamo_stack ? aws_iam_role.dynamo_ecr_access[0].arn : null
 }
-
-

@@ -16,11 +16,11 @@ This module provides custom Karpenter node pools with higher weights than the ba
 - **Instance Family**: c7i (latest generation compute optimized)
 - **Instance Sizes**: large to 48xlarge
 - **Use Cases**: CPU-intensive workloads, BuildKit, general compute
-- **Labels**: 
+- **Labels**:
   - `dynamo.ai/node-type: c7i-cpu`
   - `dynamo.ai/buildkit-compatible: true`
 
-### 2. G6 GPU Node Pool  
+### 2. G6 GPU Node Pool
 - **Instance Family**: g6 (NVIDIA L4 GPUs)
 - **Instance Sizes**: large to 48xlarge
 - **Use Cases**: GPU workloads, ML inference, training
@@ -102,7 +102,7 @@ nodeSelector:
   dynamo.ai/node-type: c7i-cpu
   dynamo.ai/buildkit-compatible: "true"
 
-# For G6 GPU nodes  
+# For G6 GPU nodes
 nodeSelector:
   dynamo.ai/node-type: g6-gpu
   dynamo.ai/buildkit-compatible: "true"

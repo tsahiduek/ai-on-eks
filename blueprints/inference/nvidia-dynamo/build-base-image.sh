@@ -60,7 +60,7 @@ print_banner() {
     local title="$1"
     local width=80
     local line=$(printf '%*s' "$width" | tr ' ' '=')
-    
+
     echo -e "\n${BLUE}${line}${NC}"
     echo -e "${BLUE}$(printf '%*s' $(( (width - ${#title}) / 2 )) '')${title}${NC}"
     echo -e "${BLUE}${line}${NC}\n"
@@ -197,16 +197,16 @@ aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS 
 build_base_image() {
     local max_retries=3
     local retry_count=0
-    
+
     while [ $retry_count -lt $max_retries ]; do
         info "Building base image (attempt $((retry_count + 1))/$max_retries)..."
-        
+
         # Build command based on framework
         local build_cmd="./build.sh"
         if [ "${FRAMEWORK}" != "none" ]; then
             build_cmd="${build_cmd} --framework ${FRAMEWORK}"
         fi
-        
+
         if ${build_cmd} 2>&1 | tee /tmp/build_output.log; then
             info "Base image build completed successfully!"
             return 0
