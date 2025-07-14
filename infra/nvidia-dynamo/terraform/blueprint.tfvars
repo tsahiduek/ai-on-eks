@@ -123,3 +123,15 @@ karpenter_g5_weight = 30
 karpenter_m5_weight = 30
 karpenter_p5_weight = 30
 karpenter_p4_weight = 30
+
+# -------------------------------------------------------------------------------------
+# ECR Token Refresh Configuration
+#
+# Automatic refresh of ECR tokens for docker-imagepullsecret and dynamo-regcred
+# -------------------------------------------------------------------------------------
+
+# Enable ECR token refresh CronJob
+enable_ecr_token_refresh = true
+
+# Schedule for ECR token refresh (every 6 hours)
+ecr_token_refresh_schedule = "0 */6 * * *"

@@ -88,3 +88,19 @@ locals {
     userData = base64encode(local.al2023_user_data)
   }
 }
+
+#---------------------------------------------------------------
+# ECR Token Refresh Variables
+#---------------------------------------------------------------
+
+variable "enable_ecr_token_refresh" {
+  description = "Enable automatic ECR token refresh for Dynamo Cloud secrets"
+  type        = bool
+  default     = true
+}
+
+variable "ecr_token_refresh_schedule" {
+  description = "Cron schedule for ECR token refresh (default: every 6 hours)"
+  type        = string
+  default     = "0 */6 * * *"
+}
