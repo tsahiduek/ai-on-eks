@@ -87,7 +87,7 @@ Install the following tools required for cluster management, container builds, a
 - **Python 3.10+**: Virtual environment for Dynamo CLI
 - **git**: Repository cloning and version control
 
-Refer to `install_prerequisites.sh` script in the infra/nvidia-dynamo folder on the ai-on-eks repo for commands to install above.
+Most prerequisites can be installed using package managers. Refer to the ai-on-eks repository documentation for detailed installation instructions for your platform.
 
 ### Step 1: Clone the Repository
 
@@ -101,9 +101,9 @@ This will be the folder structure that we will be working with going forward:
 AI-on-EKS Repository (ai-on-eks)
 │
 ├─ infra/nvidia-dynamo/
-│   ├─ install_prerequisites.sh # Install cli prerequisites
 │   ├─ install.sh               # Terraform + platform bootstrap
-│   └─ cleanup.sh               # Safe resource teardown
+│   ├─ cleanup.sh               # Safe resource teardown
+│   └─ terraform/               # Dynamo-specific terraform configurations
 │
 ├─ blueprints/inference/nvidia-dynamo/
 │   ├─ build-base-image.sh      # Mandatory base image builder
@@ -135,7 +135,7 @@ cd infra/nvidia-dynamo
    - Python venv under blueprints/inference/nvidia-dynamo/
    - `pip install ai-dynamo[all]`
    - `pip install tensorboardX` (to use the planner component to autoscale dynamo workers)
-   - Clone ai-dynamo/dynamo@v0.3.0
+   - Clone ai-dynamo/dynamo@v0.3.1
    - `dynamo_env.sh` generated with AWS vars
 
 3. **Platform Image Build**:
@@ -149,7 +149,7 @@ cd infra/nvidia-dynamo
 **Estimated Duration**: 15–30 minutes depending on AWS region and network
 
 :::caution
-AI-on-EKS default Karpenter nodegroups are using the Bottlerocket AMI which requires a kernel edit to increase the variable `max_user_namespaces` to a number like 16384. If you would like to use Ubuntu or AL2023 EKS AMIs then you would have to update the Karpenter nodegroups or create new Karpenter nodegroups with the AMIs that you want to use.
+The NVIDIA Dynamo infrastructure includes custom Karpenter node pools optimized for AI workloads. By default, it uses AL2023 AMI which has user namespaces enabled. You can optionally use Bottlerocket AMI by setting `use_bottlerocket = true` in the terraform configuration.
 :::
 
 ### Step 3: Build Base Images

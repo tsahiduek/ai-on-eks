@@ -4,7 +4,7 @@
 # NVIDIA Dynamo on EKS - Installation Script
 #
 # This script sets up the complete Dynamo Cloud platform on EKS:
-# 1. Infrastructure Setup (VPC, EKS, ECR) using aibrix pattern
+# 1. Infrastructure Setup (VPC, EKS, ECR) using ai-on-eks pattern
 # 2. Dynamo Platform Setup (venv, clone repo, build images, deploy)
 # 3. Blueprint Integration (scripts for inference graph deployment)
 #
@@ -65,11 +65,11 @@ command_exists() {
 print_banner "NVIDIA DYNAMO ON EKS - INSTALLATION"
 
 #---------------------------------------------------------------
-# Phase 1: Infrastructure Setup (aibrix pattern)
+# Phase 1: Infrastructure Setup (ai-on-eks pattern)
 #---------------------------------------------------------------
 
 section "Phase 1: Infrastructure Setup"
-info "Setting up base infrastructure using aibrix pattern..."
+info "Setting up base infrastructure using ai-on-eks pattern..."
 
 # Copy the base terraform into the local folder
 mkdir -p ./terraform/_LOCAL
