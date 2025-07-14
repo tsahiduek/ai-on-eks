@@ -4,7 +4,7 @@ This blueprint provides a complete implementation of NVIDIA Dynamo Cloud platfor
 
 ## Overview
 
-NVIDIA Dynamo is a cloud-native platform for deploying and managing AI inference graphs at scale. This implementation uses direct script deployment for simpler, more reliable operations.
+NVIDIA Dynamo is a cloud-native platform for deploying and managing AI inference graphs at scale. An inference graph is a computational workflow that defines how AI models process data through interconnected nodes, enabling complex multi-step AI operations like LLM chains, multimodal processing, and custom inference pipelines. This implementation uses direct script deployment for simpler, more reliable operations.
 
 ### Key Features
 
@@ -16,39 +16,21 @@ NVIDIA Dynamo is a cloud-native platform for deploying and managing AI inference
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Amazon EKS Cluster                      │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ Dynamo Operator │  │ Dynamo API Store│  │ Monitoring  │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ NATS JetStream  │  │ PostgreSQL      │  │ MinIO       │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │            Inference Graph Workloads                   │ │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │ │
-│  │  │   LLM   │  │Multimodal│  │ Custom  │  │   ...   │   │ │
-│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │ │
-│  └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
+![NVIDIA Dynamo Architecture](https://github.com/ai-dynamo/dynamo/blob/main/docs/images/architecture.png?raw=true)
+
 
 ## Quick Start
 
 ### Prerequisites
 
 Ensure you have the following tools installed:
-- AWS CLI configured with appropriate permissions
-- kubectl
-- Docker
-- Terraform
-- Earthly (for building platform components)
-- Python 3.8+
-- Git
+- AWS CLI configured with appropriate permissions ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- kubectl ([installation guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+- Docker ([installation guide](https://docs.docker.com/get-docker/))
+- Terraform ([installation guide](https://learn.hashicorp.com/tutorials/terraform/install-cli))
+- Earthly - A build automation tool for containerized workflows ([installation guide](https://earthly.dev/get-earthly))
+- Python 3.8+ ([installation guide](https://www.python.org/downloads/))
+- Git ([installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
 
 ### 1. Clone the Repository
 
@@ -66,6 +48,9 @@ cd infra/nvidia-dynamo
 
 # Run the complete installation
 ./install.sh
+
+# When ready to cleanup resources (requires supervision)
+./cleanup.sh
 ```
 
 #### What This Step Does:
@@ -82,11 +67,13 @@ cd infra/nvidia-dynamo
 - Installs `ai-dynamo[all]` package with all dependencies
 - Clones official Dynamo repository (v0.3.0) for examples and container builds
 - Generates environment configuration file (`dynamo_env.sh`)
+- Note: These files are in .gitignore and will not be committed to the repository
 
 **Phase 3: Container Build and Push (10-15 minutes)**
 - Builds Dynamo operator and API store images using Earthly
 - Pushes platform images to your ECR repositories
 - Uses official Dynamo build process: `earthly --push +all-docker`
+- Note: Custom image builds are required as official Dynamo images are not yet available from NVIDIA. These will be available in future releases.
 
 **Phase 4: Platform Deployment (2-5 minutes)**
 - Deploys Dynamo operator, API store, and dependencies to Kubernetes
@@ -355,7 +342,7 @@ dynamo/examples/
 
 ## Deploying Custom Models
 
-You can deploy your own models by modifying the `model_id` in the existing configuration files. This allows you to use any Hugging Face model or custom model with the Dynamo platform.
+You can deploy your own models by modifying the `model` field in the existing configuration files. This allows you to use any Hugging Face model or custom model with the Dynamo platform.
 
 ### Step-by-Step Custom Model Deployment
 

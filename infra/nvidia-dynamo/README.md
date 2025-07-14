@@ -4,7 +4,7 @@ This directory contains the infrastructure configuration for deploying NVIDIA Dy
 
 ## Overview
 
-NVIDIA Dynamo infrastructure is designed as a reference architecture that combines the ai-on-eks base infrastructure modules with Dynamo-specific configurations for optimal performance and scalability.
+NVIDIA Dynamo infrastructure is designed as a reference architecture that combines the ai-on-eks base infrastructure modules with Dynamo-specific configurations for optimal performance and scalability. An inference graph is a computational workflow that defines how AI models process data through interconnected nodes, enabling complex multi-step AI operations like LLM chains, multimodal processing, and custom inference pipelines.
 
 ## Directory Structure
 
@@ -21,6 +21,41 @@ infra/nvidia-dynamo/
 ```
 
 ## Architecture Components
+
+```mermaid
+graph TB
+    subgraph "Amazon EKS Cluster"
+        subgraph "Control Plane"
+            DO[Dynamo Operator]
+            DAS[Dynamo API Store]
+            MON[Monitoring]
+        end
+
+        subgraph "Infrastructure Services"
+            NATS[NATS JetStream]
+            PG[PostgreSQL]
+            MINIO[MinIO]
+        end
+
+        subgraph "Inference Graph Workloads"
+            LLM[LLM Models]
+            MM[Multimodal Models]
+            CUSTOM[Custom Inference]
+            MORE[...]
+        end
+    end
+
+    DO --> NATS
+    DO --> PG
+    DAS --> NATS
+    DAS --> PG
+    DAS --> MINIO
+
+    DO --> LLM
+    DO --> MM
+    DO --> CUSTOM
+    DO --> MORE
+```
 
 This infrastructure includes:
 
@@ -69,19 +104,34 @@ use_bottlerocket = false
 
 ## Usage
 
+### Prerequisites
+
+Ensure you have the following tools installed:
+- AWS CLI configured with appropriate permissions ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- kubectl ([installation guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+- Docker ([installation guide](https://docs.docker.com/get-docker/))
+- Terraform ([installation guide](https://learn.hashicorp.com/tutorials/terraform/install-cli))
+- Earthly - A build automation tool for containerized workflows ([installation guide](https://earthly.dev/get-earthly))
+- Python 3.8+ ([installation guide](https://www.python.org/downloads/))
+- Git ([installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
+
 ### Installation
 
 ```bash
 cd infra/nvidia-dynamo
 ./install.sh
+
+# When ready to cleanup resources (requires supervision)
+./cleanup.sh
 ```
 
 The installation script will:
 1. Copy base ai-on-eks infrastructure to local terraform directory
 2. Apply Dynamo-specific configurations
 3. Deploy infrastructure using Terraform
-4. Set up Dynamo platform components
+4. Set up Dynamo platform components (note: these files are in .gitignore and will not be committed to the repository)
 5. Configure monitoring and observability
+6. Build and push custom Dynamo images (required as official NVIDIA Dynamo images are not yet available)
 
 ### Customization
 
@@ -104,6 +154,8 @@ karpenter_g5_weight = 40
 cd infra/nvidia-dynamo
 ./cleanup.sh
 ```
+
+**Note**: The cleanup process requires supervision as load balancers and VPC components do not get destroyed automatically. Due to context deadline issues, the cleanup script may need to be run twice to fully remove all resources.
 
 ## Integration with ai-on-eks
 

@@ -17,7 +17,7 @@ NVIDIA Dynamo is a cloud-native platform for deploying and managing AI inference
 
 ## What is NVIDIA Dynamo?
 
-NVIDIA Dynamo is an open-source inference framework designed to optimize performance and scalability for large language models (LLMs) and generative AI applications. It addresses the challenges of traditional inference systems, especially in distributed, multi-node environments.
+NVIDIA Dynamo is an open-source inference framework designed to optimize performance and scalability for large language models (LLMs) and generative AI applications. An inference graph is a computational workflow that defines how AI models process data through interconnected nodes, enabling complex multi-step AI operations like LLM chains, multimodal processing, and custom inference pipelines. It addresses the challenges of traditional inference systems, especially in distributed, multi-node environments.
 
 ### Key Features
 
@@ -36,25 +36,39 @@ NVIDIA Dynamo is an open-source inference framework designed to optimize perform
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Amazon EKS Cluster                      │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ Dynamo Operator │  │ Dynamo API Store│  │ Monitoring  │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ NATS JetStream  │  │ PostgreSQL      │  │ MinIO       │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │            Inference Graph Workloads                   │ │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │ │
-│  │  │   LLM   │  │Multimodal│  │ Custom  │  │   ...   │   │ │
-│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │ │
-│  └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Amazon EKS Cluster"
+        subgraph "Control Plane"
+            DO[Dynamo Operator]
+            DAS[Dynamo API Store]
+            MON[Monitoring]
+        end
+
+        subgraph "Infrastructure Services"
+            NATS[NATS JetStream]
+            PG[PostgreSQL]
+            MINIO[MinIO]
+        end
+
+        subgraph "Inference Graph Workloads"
+            LLM[LLM Models]
+            MM[Multimodal Models]
+            CUSTOM[Custom Inference]
+            MORE[...]
+        end
+    end
+
+    DO --> NATS
+    DO --> PG
+    DAS --> NATS
+    DAS --> PG
+    DAS --> MINIO
+
+    DO --> LLM
+    DO --> MM
+    DO --> CUSTOM
+    DO --> MORE
 ```
 
 ## Overview
@@ -78,14 +92,14 @@ AI-on-EKS is a repository under awslabs that provides infrastructure blueprints,
 
 Install the following tools required for cluster management, container builds, and Terraform-based provisioning on your setup host, ideally an EC2 instance t3.xlarge or higher with permissions to interact with EKS and ECR services:
 
-- **AWS CLI**: `aws` for IAM, ECR, and EKS operations
-- **kubectl**: Kubernetes control plane interface
-- **helm**: Package manager for Kubernetes charts
-- **terraform**: Infrastructure-as-code for AWS resources
-- **docker**: Container builds and image pushes
-- **earthly**: Multi-stage builds for Dynamo platform images
-- **Python 3.10+**: Virtual environment for Dynamo CLI
-- **git**: Repository cloning and version control
+- **AWS CLI**: `aws` for IAM, ECR, and EKS operations ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- **kubectl**: Kubernetes control plane interface ([installation guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+- **helm**: Package manager for Kubernetes charts ([installation guide](https://helm.sh/docs/intro/install/))
+- **terraform**: Infrastructure-as-code for AWS resources ([installation guide](https://learn.hashicorp.com/tutorials/terraform/install-cli))
+- **docker**: Container builds and image pushes ([installation guide](https://docs.docker.com/get-docker/))
+- **earthly**: Multi-stage builds for Dynamo platform images - A build automation tool for containerized workflows ([installation guide](https://earthly.dev/get-earthly))
+- **Python 3.10+**: Virtual environment for Dynamo CLI ([installation guide](https://www.python.org/downloads/))
+- **git**: Repository cloning and version control ([installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
 
 Most prerequisites can be installed using package managers. Refer to the ai-on-eks repository documentation for detailed installation instructions for your platform.
 
@@ -120,6 +134,9 @@ Navigate to the `infra/nvidia-dynamo` folder and run the installer script. It wr
 ```bash
 cd infra/nvidia-dynamo
 ./install.sh
+
+# When ready to cleanup resources (requires supervision)
+./cleanup.sh
 ```
 
 **Process Details:**
@@ -137,10 +154,12 @@ cd infra/nvidia-dynamo
    - `pip install tensorboardX` (to use the planner component to autoscale dynamo workers)
    - Clone ai-dynamo/dynamo@v0.3.1
    - `dynamo_env.sh` generated with AWS vars
+   - Note: These files are in .gitignore and will not be committed to the repository
 
 3. **Platform Image Build**:
    - Earthly builds and pushes Operator & API Store images
    - Tags pushed to ECR
+   - Note: Custom image builds are required as official Dynamo images are not yet available from NVIDIA. These will be available in future releases.
 
 4. **Platform Deployment**:
    - Helm or kubectl deploys Dynamo Operator, API Store, NATS, PostgreSQL, MinIO
@@ -238,9 +257,10 @@ cp examples/llm/configs/disagg_router.yaml examples/llm/configs/my-model.yaml
 
 Edit `my-model.yaml`:
 - `Common.model`: Hugging Face model ID or custom registry path
-- `Frontend.served_model_name`: same as model
+- `Frontend.served_model_name`: same as model (must match exactly)
 - Resource fields (tensor-parallel-size, GPU counts, memory)
 - `max-model-len`, `block-size`, and any custom settings
+- Always ensure `model` and `served_model_name` fields match exactly
 
 ### 2. Build & Deploy
 
