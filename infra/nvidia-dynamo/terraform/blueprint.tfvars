@@ -2,7 +2,7 @@ name                = "dynamo-on-eks"
 enable_dynamo_stack = true
 enable_argocd       = true
 # region              = "us-west-2"
-# eks_cluster_version = "1.32"
+eks_cluster_version = "1.33"
 
 # -------------------------------------------------------------------------------------
 # EKS Addons Configuration
@@ -110,19 +110,7 @@ use_bottlerocket = false
 # Bottlerocket data disk snapshot for faster node startup
 # bottlerocket_data_disk_snapshot_id = "snap-xxxxxxxxx"
 
-# -------------------------------------------------------------------------------------
-# Karpenter Node Pool Weights Configuration
-#
-# Adjust weights to accommodate custom node pools for Dynamo workloads
-# Total weights across all pools should not exceed 100
-# -------------------------------------------------------------------------------------
 
-# Reduce base node pool weights to make room for custom pools
-karpenter_g6_weight = 30
-karpenter_g5_weight = 30
-karpenter_m5_weight = 30
-karpenter_p5_weight = 30
-karpenter_p4_weight = 30
 
 # -------------------------------------------------------------------------------------
 # ECR Token Refresh Configuration

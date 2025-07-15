@@ -367,7 +367,7 @@ module "data_addons" {
             values: ["g6"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge" ]
+            values: ["2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -380,7 +380,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -431,7 +431,7 @@ module "data_addons" {
             values: ["g5"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge" ]
+            values: ["2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -444,7 +444,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -488,7 +488,7 @@ module "data_addons" {
             values: ["m5"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "xlarge", "2xlarge", "4xlarge", "8xlarge"]
+            values: ["xlarge", "2xlarge", "4xlarge", "8xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -501,7 +501,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -560,7 +560,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -617,7 +617,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }

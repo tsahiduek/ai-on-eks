@@ -15,6 +15,12 @@ NVIDIA Dynamo is a cloud-native platform for deploying and managing AI inference
 
 # NVIDIA Dynamo on Amazon EKS
 
+:::warning Active Development
+This NVIDIA Dynamo blueprint is currently in **active development**. We are continuously improving the user experience and functionality. Features, configurations, and deployment processes may change between releases as we iterate and enhance the implementation based on user feedback and best practices.
+
+Please expect iterative improvements in upcoming releases. If you encounter any issues or have suggestions for improvements, please feel free to open an issue or contribute to the project.
+:::
+
 ## Quick Start
 
 **Want to get started immediately?** Here's the minimal command sequence:
@@ -101,6 +107,8 @@ The deployment uses Amazon EKS with the following components:
 
 ## Prerequisites
 
+**System Requirements**: Ubuntu 22.04 or 24.04 (NVIDIA Dynamo officially supports only these versions)
+
 Install the following tools on your setup host (recommended: EC2 instance t3.xlarge or higher with EKS and ECR permissions):
 
 - **AWS CLI**: Configured with appropriate permissions ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
@@ -111,6 +119,7 @@ Install the following tools on your setup host (recommended: EC2 instance t3.xla
 - **earthly**: Multi-platform build automation tool used by NVIDIA Dynamo for reproducible container builds ([installation guide](https://earthly.dev/get-earthly))
 - **Python 3.10+**: With pip and venv ([installation guide](https://www.python.org/downloads/))
 - **git**: Version control ([installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
+- **EKS Cluster**: Version 1.33 (tested and supported)
 
 <CollapsibleContent header={<h2><span>Deploying the Solution</span></h2>}>
 
@@ -274,18 +283,18 @@ The deployment automatically creates:
 - **ServiceMonitor**: Configures Prometheus to scrape metrics
 - **Dashboards**: Pre-configured Grafana dashboards for inference monitoring
 
-## Clean Up
-
-Remove all resources using the cleanup script:
-
-```bash
-cd infra/nvidia-dynamo
-./cleanup.sh
-```
-
-This safely destroys the NVIDIA Dynamo deployments and infrastructure components in the correct order.
-
 ## Advanced Configuration
+
+### ECR Authentication
+
+The deployment uses **IRSA (IAM Roles for Service Accounts)** for secure ECR access:
+
+- **Primary Method**: IRSA eliminates credential rotation
+- **Fallback Method**: ECR token refresh CronJob (legacy mode)
+- **Security**: Service accounts automatically authenticate to ECR
+- **No Secrets**: No long-lived credentials stored in Kubernetes
+
+**Note**: AWS Pod Identity is available as an alternative to IRSA (GA since April 2024), but IRSA remains the recommended approach due to its maturity, wide adoption, and proven reliability in production environments.
 
 ### Custom Model Deployment
 
@@ -315,19 +324,22 @@ VllmWorker:
 
 ### Karpenter Node Pools
 
-The deployment includes custom Karpenter node pools optimized for NVIDIA Dynamo:
+The deployment can optionally use custom Karpenter node pools optimized for NVIDIA Dynamo:
 
-- **C7i CPU Pools**: For general compute and BuildKit
+- **C7i CPU Pools**: For general compute and BuildKit (newer than base M5 instances)
 - **G6 GPU Pools**: For inference workloads with NVIDIA L4 GPUs
-- **Higher Priority**: Weight 100 vs base addons weight 50
+- **Higher Priority**: Weight 100 vs base addons weight 50 for priority scheduling
+- **BuildKit Support**: User namespace configuration for container builds
 - **EFA Support**: Low-latency networking for multi-node setups
+
+**Note**: Custom node pools are disabled by default. The base infrastructure provides existing Karpenter node pools (G6 GPU, G5 GPU, M5 CPU) that work well for most Dynamo workloads. Enable custom pools only if you need BuildKit support or higher scheduling priority.
 
 ### Configuration Options
 
 Modify `terraform/blueprint.tfvars` for customization:
 
 ```hcl
-# Enable custom node pools
+# Enable custom node pools (optional - disabled by default)
 enable_custom_karpenter_nodepools = true
 
 # Choose AMI (AL2023 recommended)
@@ -402,5 +414,22 @@ This blueprint is designed for users who want:
 3. **Integrate Applications**: Connect your applications to the inference endpoints
 4. **Monitor Performance**: Use Grafana dashboards for ongoing monitoring
 5. **Optimize Costs**: Implement auto-scaling and resource optimization
+
+## Clean Up
+
+When you're finished with your NVIDIA Dynamo deployment, remove all resources using the cleanup script:
+
+```bash
+cd infra/nvidia-dynamo
+./cleanup.sh
+```
+
+This safely destroys the NVIDIA Dynamo deployments and infrastructure components in the correct order, including:
+- Dynamo platform components and workloads
+- Kubernetes resources and namespaces
+- ECR repositories and container images
+- Terraform-managed infrastructure (EKS cluster, VPC, etc.)
+
+The cleanup script ensures proper resource cleanup to avoid any lingering costs.
 
 This deployment provides a production-ready NVIDIA Dynamo environment on Amazon EKS with enterprise-grade features including Karpenter automatic scaling, EFA networking, and seamless AWS service integration.

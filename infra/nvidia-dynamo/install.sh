@@ -65,6 +65,41 @@ command_exists() {
 print_banner "NVIDIA DYNAMO ON EKS - INSTALLATION"
 
 #---------------------------------------------------------------
+# System Compatibility Check
+#---------------------------------------------------------------
+
+section "System Compatibility Check"
+
+# Check if running on supported Ubuntu version
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    if [ "$ID" = "ubuntu" ]; then
+        case "$VERSION_ID" in
+            "22.04"|"24.04")
+                success "Detected supported Ubuntu version: $VERSION_ID"
+                ;;
+            *)
+                error "Unsupported Ubuntu version: $VERSION_ID"
+                error "NVIDIA Dynamo requires Ubuntu 22.04 or 24.04"
+                error "Please use a supported Ubuntu version"
+                exit 1
+                ;;
+        esac
+    else
+        error "Unsupported operating system: $ID"
+        error "NVIDIA Dynamo requires Ubuntu 22.04 or 24.04"
+        error "Please use a supported Ubuntu system"
+        exit 1
+    fi
+else
+    error "Cannot detect operating system"
+    error "NVIDIA Dynamo requires Ubuntu 22.04 or 24.04"
+    exit 1
+fi
+
+success "System compatibility check passed"
+
+#---------------------------------------------------------------
 # Phase 1: Infrastructure Setup (ai-on-eks pattern)
 #---------------------------------------------------------------
 
@@ -80,6 +115,13 @@ info "Adding Dynamo-specific terraform configurations..."
 cp ./terraform/dynamo-*.tf ./terraform/_LOCAL/
 cp ./terraform/custom-*.tf ./terraform/_LOCAL/
 cp ./terraform/blueprint.tfvars ./terraform/_LOCAL/
+
+# Copy modified base files to overwrite the base versions
+info "Applying Dynamo-specific modifications to base terraform files..."
+cp ./terraform/variables.tf ./terraform/_LOCAL/
+cp ./terraform/versions.tf ./terraform/_LOCAL/
+cp ./terraform/addons.tf ./terraform/_LOCAL/
+cp ./terraform/outputs.tf ./terraform/_LOCAL/
 
 terraform init -upgrade
 
@@ -100,6 +142,7 @@ info "Extracting terraform outputs..."
 export AWS_ACCOUNT_ID=$(terraform output -raw aws_account_id 2>/dev/null || aws sts get-caller-identity --query Account --output text)
 export AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || aws configure get region || echo "us-west-2")
 export CLUSTER_NAME=$(terraform output -raw cluster_name 2>/dev/null || echo "dynamo-on-eks")
+export DYNAMO_REPO_VERSION=$(terraform output -raw dynamo_stack_version 2>/dev/null || echo "v0.3.1")
 
 # Update kubeconfig
 info "Updating kubeconfig for cluster access..."
@@ -132,9 +175,28 @@ else
     fi
 fi
 
-# Wait a moment for the role to propagate
-info "Waiting for service-linked role to propagate..."
-sleep 5
+# Verification loop to ensure service-linked role is actually set
+info "Verifying AWS Spot service-linked role is properly configured..."
+RETRY_COUNT=0
+MAX_RETRIES=12
+RETRY_DELAY=5
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if aws iam get-role --role-name AWSServiceRoleForEC2Spot >/dev/null 2>&1; then
+        success "AWS Spot service-linked role verification successful"
+        break
+    else
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            info "Service-linked role not yet available, retrying in ${RETRY_DELAY} seconds... (attempt ${RETRY_COUNT}/${MAX_RETRIES})"
+            sleep $RETRY_DELAY
+        else
+            error "Service-linked role verification failed after ${MAX_RETRIES} attempts"
+            error "This may cause issues with Karpenter spot instance provisioning"
+            error "Please verify the role exists manually: aws iam get-role --role-name AWSServiceRoleForEC2Spot"
+        fi
+    fi
+done
 
 success "Phase 1.5 completed: AWS service-linked roles are ready"
 
@@ -152,7 +214,7 @@ info "Creating Dynamo environment configuration..."
 cat > "${ENV_FILE}" << EOF
 #!/bin/bash
 # Dynamo Environment Configuration for ai-on-eks
-export DYNAMO_REPO_VERSION="v0.3.1"
+export DYNAMO_REPO_VERSION="${DYNAMO_REPO_VERSION}"
 export DYNAMO_FROM_SOURCE=false
 export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID}"
 export AWS_REGION="${AWS_REGION}"
@@ -623,7 +685,6 @@ if [ "${SKIP_ECR_CREDENTIALS:-false}" = "true" ]; then
 else
     echo "- Using ECR credential rotation (legacy mode)"
     echo "- Automatic refresh: CronJob runs every 6 hours"
-    echo "- Manual refresh: infra/nvidia-dynamo/scripts/manual-ecr-refresh.sh"
     echo "- Monitor status: kubectl get cronjob ecr-token-refresh -n ${NAMESPACE}"
 fi
 echo "================================================"
