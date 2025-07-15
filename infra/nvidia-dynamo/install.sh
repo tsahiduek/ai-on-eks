@@ -81,6 +81,8 @@ cp ./terraform/dynamo-*.tf ./terraform/_LOCAL/
 cp ./terraform/custom-*.tf ./terraform/_LOCAL/
 cp ./terraform/blueprint.tfvars ./terraform/_LOCAL/
 
+terraform init -upgrade
+
 # Apply terraform
 cd terraform/_LOCAL
 info "Applying terraform infrastructure..."
