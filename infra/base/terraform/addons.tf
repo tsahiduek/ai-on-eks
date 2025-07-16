@@ -78,14 +78,14 @@ module "eks_blueprints_addons" {
   aws_load_balancer_controller = {
     set = [{
       name  = "enableServiceMutatorWebhook"
-      value = "false"
+      value = "${var.enable_service_mutator_webhook}"
     }]
   }
 
   #---------------------------------------
   # Ingress Nginx Add-on
   #---------------------------------------
-  enable_ingress_nginx = true
+  enable_ingress_nginx = var.enable_ingress_nginx
   ingress_nginx = {
     version = "4.12.1"
     values  = [templatefile("${path.module}/helm-values/ingress-nginx-values.yaml", {})]

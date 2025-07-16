@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# Default values
+REPO_NAME="dlc-slurmd"
+IMAGE_TAG="25.05.0-ubuntu24.04"
+AWS_REGION=$(aws configure get region || echo "us-west-2")
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+SKIP_IMAGE_BUILD=false
+SKIP_CREATE_REPO=false
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --repo-name)
+      REPO_NAME="$2"
+      shift 2
+      ;;
+    --tag)
+      IMAGE_TAG="$2"
+      shift 2
+      ;;
+    --region)
+      AWS_REGION="$2"
+      shift 2
+      ;;
+    --skip-build)
+      SKIP_IMAGE_BUILD=true
+      shift
+      ;;
+    --skip-repo)
+      SKIP_CREATE_REPO=true
+      shift
+      ;;
+    --help)
+      echo "Usage: $0 [OPTIONS]"
+      echo "      --repo-name    Repository name (default: dlc-slurmd)"
+      echo "      --tag          Image tag (default: 25.05.0-ubuntu24.04)"
+      echo "      --region       AWS region (default: configured region)"
+      echo "      --skip-build   Skip image build (use existing image)"
+      echo "      --skip-repo    Skip repo creation after image build (push to existing repo)"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
+
+IMAGE_REPOSITORY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}"
+
+if [[ "$SKIP_IMAGE_BUILD" == "true" ]]; then
+  echo "Skipping image build..."
+
+  # Check if image exists in ECR
+  if ! aws ecr describe-images --repository-name ${REPO_NAME} --image-ids imageTag=${IMAGE_TAG} --region ${AWS_REGION} >/dev/null 2>&1; then
+    echo "Error: Image ${IMAGE_REPOSITORY}:${IMAGE_TAG} not found in ECR"
+    echo "Run without --skip-build flag to build and push the image first, add --help for help"
+    exit 1
+  fi
+
+  echo "Found existing image: ${IMAGE_REPOSITORY}:${IMAGE_TAG}"
+
+else 
+    # Authenticate to DLC repo (Account 763104351884 is publicly known) 
+    aws ecr get-login-password --region $AWS_REGION \
+    | docker login --username AWS \
+    --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
+
+    # Build the DLC Slurmd container image
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        docker buildx build --platform linux/amd64 -t ${REPO_NAME}:${IMAGE_TAG} -f dlc-slurmd.Dockerfile .
+    else
+        # Linux
+        docker build -t ${REPO_NAME}:${IMAGE_TAG} -f dlc-slurmd.Dockerfile .
+    fi
+    
+    if [[ "$SKIP_CREATE_REPO" == "true" ]]; then
+      echo "Skipping ECR repo creation..."
+    else
+      # Create ECR repo
+      aws ecr create-repository --repository-name ${REPO_NAME}
+    fi
+
+    # Authenticate to the repo 
+    aws ecr get-login-password --region $AWS_REGION \
+    | docker login --username AWS \
+    --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+    
+    # Tag the image
+    docker tag ${REPO_NAME}:${IMAGE_TAG} ${IMAGE_REPOSITORY}:${IMAGE_TAG}
+
+    # Push image to ECR
+    docker push ${IMAGE_REPOSITORY}:${IMAGE_TAG}
+fi
+
+# Make SSH Keys 
+if [[ ! -f ~/.ssh/id_ed25519_slurm ]]; then
+    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_slurm -C "slurm-login" -N ""
+fi
+
+# Get the public key 
+SSH_KEY="$(cat ~/.ssh/id_ed25519_slurm.pub)"
+
+# Set the values in blueprint.tfvars (cross-platform sed)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' \
+      -e "s|image_repository.*= \".*\"|image_repository = \"${IMAGE_REPOSITORY}\"|" \
+      -e "s|image_tag.*= \".*\"|image_tag = \"${IMAGE_TAG}\"|" \
+      -e "s|ssh_key.*= \".*\"|ssh_key = \"${SSH_KEY}\"|" \
+      terraform/blueprint.tfvars
+else
+    # Linux
+    sed -i \
+      -e "s|image_repository.*= \".*\"|image_repository = \"${IMAGE_REPOSITORY}\"|" \
+      -e "s|image_tag.*= \".*\"|image_tag = \"${IMAGE_TAG}\"|" \
+      -e "s|ssh_key.*= \".*\"|ssh_key = \"${SSH_KEY}\"|" \
+      terraform/blueprint.tfvars
+fi 
