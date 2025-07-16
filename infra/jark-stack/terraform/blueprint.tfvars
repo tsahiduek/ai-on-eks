@@ -7,7 +7,7 @@ enable_argo_events               = true
 enable_argocd                    = true
 enable_ai_ml_observability_stack = true
 # region                           = "us-west-2"
-# eks_cluster_version              = "1.32"
+# eks_cluster_version              = "1.33"
 
 # -------------------------------------------------------------------------------------
 # EKS Addons Configuration
