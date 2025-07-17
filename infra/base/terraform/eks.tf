@@ -257,7 +257,7 @@ module "eks" {
       # TODO - Update the subnet to match the availability zone of YOUR capacity reservation
       #-------------------------------------
       subnet_ids = [compact([for subnet_id, cidr_block in zipmap(module.vpc.private_subnets, module.vpc.private_subnets_cidr_blocks) : substr(cidr_block, 0, 4) == "100." ? subnet_id : null])[1]]
-      
+
       #------------------------------------
       # TODO - Uncomment the below block and update the capacity reservation ID
       #------------------------------------

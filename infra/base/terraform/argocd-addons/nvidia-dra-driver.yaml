@@ -16,13 +16,13 @@ spec:
         nvidiaDriverRoot: /
         nvidiaCtkPath: /usr/bin/nvidia-ctk
         gpuResourcesEnabledOverride: true # Required to deploy GPU and MIG deviceclasses
-        
+
         resources:
           gpus:
             enabled: true # set to false to disable experimental gpu support
           computeDomains:
             enabled: true
-        
+
         controller:
           nodeSelector: null
           affinity: null
@@ -34,7 +34,7 @@ spec:
             requests:
               memory: "256Mi"
               cpu: "100m"
-        
+
         kubeletPlugin:
           affinity:
             nodeAffinity:

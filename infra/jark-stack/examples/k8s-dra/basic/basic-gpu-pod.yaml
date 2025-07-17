@@ -19,7 +19,7 @@ spec:
   - name: gpu0
     resourceClaimTemplateName: single-gpu
   nodeSelector:
-    NodeGroupType: g6-mng      
+    NodeGroupType: g6-mng
     nvidia.com/gpu.present: "true"
   tolerations:
   - key: "nvidia.com/gpu"

@@ -41,7 +41,7 @@ spec:
   - name: shared-gpu-claim
     resourceClaimTemplateName: timeslicing-gpu-template
   nodeSelector:
-    NodeGroupType: g6-mng      
+    NodeGroupType: g6-mng
     nvidia.com/gpu.present: "true"
   tolerations:
   - key: nvidia.com/gpu
@@ -50,7 +50,7 @@ spec:
 
 
 ---
-# Pod 2 - Training workload  
+# Pod 2 - Training workload
 apiVersion: v1
 kind: Pod
 metadata:
@@ -93,10 +93,9 @@ spec:
   - name: shared-gpu-claim-2
     resourceClaimTemplateName: timeslicing-gpu-template
   nodeSelector:
-    NodeGroupType: g6-mng      
+    NodeGroupType: g6-mng
     nvidia.com/gpu.present: "true"
   tolerations:
   - key: nvidia.com/gpu
     operator: Exists
     effect: NoSchedule
-

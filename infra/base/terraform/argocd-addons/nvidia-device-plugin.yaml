@@ -19,11 +19,11 @@ spec:
         # Target only GPU nodes with accelerator: nvidia label
         nodeSelector:
           accelerator: nvidia
-        
+
         # Enable GPU Feature Discovery (default: false)
         gfd:
           enabled: true
-        
+
         # Configure Node Feature Discovery components
         nfd:
           gc:
@@ -40,7 +40,7 @@ spec:
                 operator: Exists
                 effect: NoSchedule
               - operator: "Exists"
-                  
+
   destination:
     server: https://kubernetes.default.svc
     namespace: nvidia-device-plugin
@@ -59,4 +59,3 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-
