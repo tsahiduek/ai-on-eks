@@ -357,7 +357,17 @@ Make a new directory for your checkpoints
 ```
 mkdir -p checkpoints
 ```
-Copy the `llama2_7b-training.sbatch` batch training script: 
+:::info
+By default the `llama2_7b-training.sbatch` batch training script is configured to distribute the FSDP workload across 4 nodes. The Slurm NodeSet maps to the `g5-gpu-karpenter` NodePool via a `NodeSelector.instanceType` value. If Karpenter is unable to find 4 on-demand or spot instances, you may need to make adjustment to the batch training script, then upload a new copy to your provisioned S3 bucket, which will sync it to the FSx for Lustre file system:
+```
+cd terraform/_LOCAL
+S3_BUCKET_NAME=$(terraform output -raw fsx_s3_bucket_name)
+cd ../../
+aws s3 cp examples/llama2_7b-training.sbatch s3://${S3_BUCKET_NAME}/
+``` 
+:::
+
+Copy the `llama2_7b-training.sbatch` batch training script into the FSDP for Slurm example directory: 
 ```
 cp /fsx/data/llama2_7b-training.sbatch ./llama2_7b-training.sbatch
 ```
@@ -483,6 +493,8 @@ This script will cleanup the environment using `-target` option to ensure all th
 
 ```bash
 cd ai-on-eks/infra/slinky-slurm
+```
+```
 ./cleanup.sh
 ```
 

@@ -1,5 +1,5 @@
 resource "kubectl_manifest" "priority_class" {
-count       = var.deploy_slurm_cluster ? 1 : 0
+count       = var.enable_slurm_cluster ? 1 : 0
 yaml_body   = <<YAML
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass

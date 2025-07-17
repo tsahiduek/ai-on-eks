@@ -88,7 +88,7 @@ resource "kubectl_manifest" "cert_manager_yaml" {
 }
 
 resource "kubernetes_secret" "argocd_bitnami_repo" {
-  count     = var.deploy_slurm_cluster ? 1 : 0
+  count     = var.enable_slurm_cluster ? 1 : 0
   metadata {
     name      = "argocd-bitnami-repo"
     namespace = "argocd"
@@ -108,7 +108,7 @@ resource "kubernetes_secret" "argocd_bitnami_repo" {
 }
 
 resource "kubernetes_secret" "argocd_metrics_server_repo" {
-  count     = var.deploy_slurm_cluster ? 1 : 0
+  count     = var.enable_slurm_cluster ? 1 : 0
   metadata {
     name      = "argocd-metrics-server-repo"
     namespace = "argocd"
@@ -137,7 +137,7 @@ resource "kubectl_manifest" "slurm_operator_yaml" {
 }
 
 resource "kubectl_manifest" "slurm_cluster_yaml" {
-  count     = var.deploy_slurm_cluster ? 1 : 0
+  count     = var.enable_slurm_cluster ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/slinky-slurm/slurm-cluster.yaml", {
     slurm_values = indent(8, templatefile("${path.module}/argocd-addons/slinky-slurm/slurm-values.yaml", {
       image_repository = var.image_repository

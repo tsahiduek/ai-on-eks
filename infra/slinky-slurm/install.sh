@@ -59,21 +59,3 @@ S3_BUCKET_NAME=$(terraform output -raw fsx_s3_bucket_name)
 
 # Copy sbatch to S3 bucket for DRA sync
 aws s3 cp ../../examples/llama2_7b-training.sbatch s3://${S3_BUCKET_NAME}/ --region $REGION
-
-# echo "Clean up the Classic Load Balancer..."
-# for arn in $(aws resourcegroupstaggingapi get-resources \
-#   --resource-type-filters elasticloadbalancing:loadbalancer \
-#   --tag-filters "Key=kubernetes.io/service-name,Values=slurm/slurm-login" \
-#   --query 'ResourceTagMappingList[?!contains(ResourceARN, `/net/`) && !contains(ResourceARN, `/app/`)].ResourceARN' \
-#   --region $REGION \
-#   --output text 2>/dev/null || true); do \
-#     echo "Found ELB: $arn"; \
-#     lb_name=$(echo "$arn" | cut -d'/' -f2)
-#     for sg_id in $(aws elb describe-load-balancers --region $REGION --load-balancer-names "$lb_name" \
-#       --query 'LoadBalancerDescriptions[0].SecurityGroups[]' --output text 2>/dev/null || true); do \
-#         echo "Deleting ELB SG: $sg_id"; \
-#         aws ec2 delete-security-group --no-cli-pager --region $REGION --group-id "$sg_id" || true; \
-#       done
-#     echo "Deleting ELB: $arn"; \
-#     aws elb delete-load-balancer --region $REGION --load-balancer-name "$lb_name" || true
-#   done

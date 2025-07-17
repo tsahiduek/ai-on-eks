@@ -68,6 +68,8 @@ Each stack inherits the `base` stack's components. These components include:
 | `enable_mpi_operator`                    | Enable the MPI Operator                             | `false`                  |
 | `enable_aibrix_stack`                    | Enable the AIBrix stack                             | `false`                  |
 | `aibrix_stack_version`                   | AIBrix Stack version                                | `v0.2.1`                 |
+| `enable_slurm_operator`                  | Enable deployment of the Slinky Slurm Operator      | `false`                  |
+| `enable_slurm_cluster`                   | Enable deployment of the Slinky Slurm Cluster       | `false`                  |
 
 ### JupyterHub
 

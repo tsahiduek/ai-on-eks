@@ -1,5 +1,5 @@
 resource "time_sleep" "wait_for_slurm_service" {
-  count           = var.deploy_slurm_cluster ? 1 : 0
+  count           = var.enable_slurm_cluster ? 1 : 0
   create_duration = "60s"
   
   depends_on = [
@@ -8,7 +8,7 @@ resource "time_sleep" "wait_for_slurm_service" {
 }
 
 resource "kubernetes_annotations" "slurm_login_service" {
-  count       = var.deploy_slurm_cluster ? 1 : 0
+  count       = var.enable_slurm_cluster ? 1 : 0
   api_version = "v1"
   kind        = "Service"
   metadata {
