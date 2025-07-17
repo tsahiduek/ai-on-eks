@@ -13,7 +13,7 @@ enable_ai_ml_observability_stack = true
 # enable_nvidia_dra_driver         = true
 # enable_nvidia_gpu_operator       = true
 # -------------------------------------------------------------------------------------
-# region                           = "us-east-1"
+# region                           = "us-west-2"
 # eks_cluster_version              = "1.33"
 
 # -------------------------------------------------------------------------------------
@@ -25,7 +25,6 @@ enable_ai_ml_observability_stack = true
 # If you need to add a new addon that isn't listed here:
 # 1. Add the addon name to the `enable_cluster_addons` variable in `base/terraform/variables.tf`
 # 2. Update the `locals.cluster_addons` logic in `eks.tf` to include any required configuration
-#
 # -------------------------------------------------------------------------------------
 
 # enable_cluster_addons = {
