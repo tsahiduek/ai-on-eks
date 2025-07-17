@@ -1,25 +1,5 @@
 # SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
 # SPDX-License-Identifier: Apache-2.0
-# Inter-pod anti-affinity and node affinity for non-compute components
-commonAffinity: &commonAffinity
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: "node.kubernetes.io/instance-type"
-            operator: In
-            values:
-              - "m5.xlarge"
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      podAffinityTerm:
-        labelSelector:
-          matchExpressions:
-          - key: "app.kubernetes.io/name"
-            operator: In
-            values: ["slurmdbd", "slurmctld", "slurm-exporter", "login", "mariadb", "slurmrestd"]
-        topologyKey: "kubernetes.io/hostname"
 
 #
 # Debug configuration.
@@ -66,7 +46,7 @@ imagePullPolicy: IfNotPresent
 # -- (string)
 # Set the priority class to use.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-# priorityClassName: ""
+priorityClassName: ""
 
 #
 # Slurm JWT authentication.
@@ -252,7 +232,7 @@ controller:
   # -- (string)
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-  # priorityClassName: ""
+  priorityClassName: ""
   #
   # -- (map)
   # Selector which must match a node's labels for the pod to be scheduled on that node.
@@ -263,7 +243,7 @@ controller:
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: *commonAffinity
+  affinity: {}
   #
   # -- (list)
   # Configure pod tolerations.
@@ -327,7 +307,7 @@ login:
   #
   # -- (bool)
   # Enables login nodes.
-  enabled: true
+  enabled: false
   #
   # -- (integer)
   # Set the number of replicas to deploy.
@@ -358,7 +338,7 @@ login:
   #
   # -- (integer)
   # The external service port number.
-  servicePort: 22
+  servicePort: 2222
   #
   # -- (integer)
   # The external service node port number.
@@ -367,35 +347,18 @@ login:
   #
   # -- (list)
   # The `/root/.ssh/authorized_keys` file to write, represented as a list.
-  rootSshAuthorizedKeys:
-    - ${ssh_key}
+  rootSshAuthorizedKeys: []
+    # - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx user@example.com
   #
   # -- (map)
   # The `/etc/ssh/sshd_config` file to use, represented as a map.
   # Ref: https://man.openbsd.org/sshd_config
   sshdConfig:
     # LogLevel: DEBUG3
-    # Include: "/etc/ssh/sshd_config.d/*.conf"
-    # X11Forwarding: "yes"
-    # UsePAM: "yes"
-    # Subsystem: sftp /usr/libexec/openssh/sftp-server
-    AcceptEnv: "LANG LC_*"
-    AuthorizedKeysFile: "/root/.ssh/authorized_keys"
-    ChallengeResponseAuthentication: "no"
-    ClientAliveCountMax: "3"
-    ClientAliveInterval: "60"
-    LogLevel: "INFO"
-    PasswordAuthentication: "no"
-    PermitRootLogin: "yes"
-    Port: "22"
-    PrintMotd: "no"
-    Protocol: "2"
-    PubkeyAuthentication: "yes"
-    Subsystem: "sftp internal-sftp"
-    TCPKeepAlive: "yes"
-    UseDNS: "no"
-    UsePAM: "no"
-    X11Forwarding: "no"
+    Include: "/etc/ssh/sshd_config.d/*.conf"
+    X11Forwarding: "yes"
+    UsePAM: "yes"
+    Subsystem: sftp /usr/libexec/openssh/sftp-server
   #
   # The `/etc/sssd/sssd.conf` represented by as a map.
   sssdConf:
@@ -448,9 +411,7 @@ login:
   # --(list)
   # List of volume mounts.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-  extraVolumeMounts:
-    - name: fsx-lustre
-      mountPath: /fsx
+  extraVolumeMounts: []
     # - name: nfs-home
     #   mountPath: /home
     # - name: nfs-data
@@ -459,15 +420,7 @@ login:
   # --(list)
   # Define list of pod volumes.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-  extraVolumes: 
-     - name: fsx-lustre
-       persistentVolumeClaim: 
-        claimName: fsx-static-pvc
-    # - name: nfs-home
-    #   persistentVolumeClaim:
-    #     claimName: nfs-home
-    # - name: nfs-data
-    #   persistentVolumeClaim:
+  extraVolumes: []
     # - name: nfs-home
     #   nfs:
     #     server: nfs-server.example.com
@@ -479,7 +432,7 @@ login:
   # -- (string)
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-  # priorityClassName: ""
+  priorityClassName: ""
   #
   # -- (map)
   # Selector which must match a node's labels for the pod to be scheduled on that node.
@@ -490,7 +443,7 @@ login:
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: *commonAffinity
+  affinity: {}
   #
   # -- (list)
   # Configure pod tolerations.
@@ -534,7 +487,7 @@ compute:
       #
       # -- (string)
       # Name of NodeSet. Must be unique.
-    - name: node
+    - name: debug
       #
       # -- (bool)
       # Enables the NodeSet in Slurm.
@@ -542,22 +495,22 @@ compute:
       #
       # -- (integer)
       # Set the number of replicas to deploy.
-      replicas: 4
+      replicas: 1
       #
       # -- (string)
       # Set the image pull policy.
-      imagePullPolicy: Always
+      imagePullPolicy: IfNotPresent
       #
       # Set the image to use.
       image:
         #
         # -- (string)
         # Set the image repository to use.
-        repository: ${image_repository}
+        repository: ""
         #
         # -- (string)
         # Set the image tag to use.
-        tag: ${image_tag}
+        tag: ""
       #
       # -- (object)
       # NodeSet specific authcred configuration, otherwise global authcred is used.
@@ -571,20 +524,18 @@ compute:
       # -- (string)
       # Set the priority class to use.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-      priorityClassName: "slurm-node-priority"
+      priorityClassName: ""
       #
       # -- (map)
       # Selector which must match a node's labels for the pod to be scheduled on that node.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
       nodeSelector:
-        instanceType: g5-gpu-karpenter
         kubernetes.io/os: linux
       #
       # -- (object)
       # Set affinity for Kubernetes Pod scheduling.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
       affinity: {}
-
         # podAntiAffinity:
         #   preferredDuringSchedulingIgnoredDuringExecution:
         #     - weight: 100
@@ -603,21 +554,15 @@ compute:
       # -- (list)
       # Configure pod tolerations.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-      tolerations: 
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
+      tolerations: []
       #
       # -- (object)
       # Set container resource requests and limits for Kubernetes Pod scheduling.
       # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
-      resources:
-        limits: 
-            nvidia.com/gpu: "1"
-            vpc.amazonaws.com/efa: 1
-        requests:
-            nvidia.com/gpu: "1"
-            vpc.amazonaws.com/efa: 1
+      resources: {}
+        # limits:
+        #   cpu: 1
+        #   memory: 1Gi
       #
       # -- (bool)
       # Enable to propagate the pod `resources.limits` into slurmd.
@@ -682,11 +627,7 @@ compute:
       # --(list)
       # List of volume mounts.
       # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-      extraVolumeMounts:
-        - name: fsx-lustre
-          mountPath: /fsx
-        - name: shmem
-          mountPath: /dev/shm
+      extraVolumeMounts: []
         # - name: nfs-home
         #   mountPath: /home
         # - name: nfs-data
@@ -695,13 +636,7 @@ compute:
       # --(list)
       # Define list of pod volumes.
       # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-      extraVolumes:
-        - name: fsx-lustre
-          persistentVolumeClaim: 
-            claimName: fsx-static-pvc
-        - name: shmem
-          hostPath: 
-            path: /dev/shm
+      extraVolumes: []
         # - name: nfs-home
         #   nfs:
         #     server: nfs-server.example.com
@@ -825,7 +760,16 @@ accounting:
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: *commonAffinity
+  affinity: {}
+    # podAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     - topologyKey: kubernetes.io/hostname
+    #       labelSelector:
+    #         matchExpressions:
+    #           - key: app.kubernetes.io/name
+    #             operator: In
+    #             values:
+    #               - mariadb
   #
   # -- (list)
   # Configure pod tolerations.
@@ -921,9 +865,8 @@ mariadb:
         - ReadWriteOnce
       size: 8Gi
       selector: {}
-    # priorityClassName: ""
+    priorityClassName: ""
     tolerations: []
-    affinity: *commonAffinity
   metrics:
     enabled: false
     serviceMonitor:
@@ -980,7 +923,7 @@ restapi:
   # -- (string)
   # Set the priority class to use.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
-  # priorityClassName: ""
+  priorityClassName: ""
   #
   # -- (map)
   # Selector which must match a node's labels for the pod to be scheduled on that node.
@@ -991,7 +934,17 @@ restapi:
   # -- (object)
   # Set affinity for Kubernetes Pod scheduling.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
-  affinity: *commonAffinity
+  affinity: {}
+    # podAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     - topologyKey: kubernetes.io/hostname
+    #       labelSelector:
+    #         matchExpressions:
+    #           - key: app.kubernetes.io/name
+    #             operator: In
+    #             values:
+    #               - slurmctld
+    #               - slurmdbd
   #
   # -- (list)
   # Configure pod tolerations.
@@ -1017,4 +970,13 @@ slurm-exporter:
   exporter:
     enabled: true
     secretName: "slurm-token-exporter"
-    affinity: *commonAffinity
+    affinity: {}
+      # podAffinity:
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     - topologyKey: kubernetes.io/hostname
+      #       labelSelector:
+      #         matchExpressions:
+      #           - key: app.kubernetes.io/name
+      #             operator: In
+      #             values:
+      #               - slurmrestd

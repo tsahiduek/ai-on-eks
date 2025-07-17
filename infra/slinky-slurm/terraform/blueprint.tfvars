@@ -10,9 +10,9 @@ enable_slurm_operator            = true
 deploy_slurm_cluster             = true
 enable_ingress_nginx             = false
 enable_service_mutator_webhook   = true
-image_repository = ""
-image_tag = ""
-ssh_key = ""
+image_repository = "659924747436.dkr.ecr.us-west-2.amazonaws.com/dlc-slurmd"
+image_tag = "25.05.0-ubuntu24.04"
+ssh_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOgiXVQ3l7+huQ2vC6gvpTqd94YljwjneCdH/irPNc1d natharno@amazon.com"
 # region                         = "us-west-2"
 # eks_cluster_version            = "1.32"
 

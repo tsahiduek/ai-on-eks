@@ -86,6 +86,11 @@ variable "deploy_fsx_volume" {
   type        = bool
   default     = false
 }
+variable "fsx_pvc_namespace" {
+  description = "Namespace for FSx PVC"
+  type        = string
+  default     = "default"
+}
 variable "enable_amazon_prometheus" {
   description = "Enable Amazon Prometheus"
   type        = bool
@@ -318,4 +323,53 @@ variable "enable_nvidia_dcgm_exporter" {
   EOF
   type        = bool
   default     = true
+}
+
+# Slinky Slurm Specific Variables
+variable "enable_cert_manager" {
+  description = "Enable cert-manager addon"
+  type        = bool
+  default     = false
+}
+
+variable "enable_slurm_operator" {
+  description = "Enable slurm-operator addon"
+  type        = bool
+  default     = false
+}
+
+variable "deploy_slurm_cluster" {
+  description = "Deploy default slurm cluster"
+  type        = bool
+  default     = false
+}
+
+variable "image_repository" {
+  description = "Repository for the slurmd container image"
+  type        = string
+  default     = ""
+}
+
+variable "image_tag" {
+  description = "Tag for the slurmd container image"
+  type        = string
+  default     = ""
+}
+
+variable "ssh_key" {
+  description = "SSH key for login pod access"
+  type        = string
+  default     = ""
+}
+
+variable "enable_ingress_nginx" {
+  description = "Enable ingress-nginx addon"
+  type        = bool
+  default     = true
+}
+
+variable "enable_service_mutator_webhook" {
+  description = "Enable service-mutator webhook for AWS Load Balancer Controller"
+  type        = bool
+  default     = false
 }
