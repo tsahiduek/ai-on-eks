@@ -245,37 +245,6 @@ module "data_addons" {
       })
     ]
   }
-  #---------------------------------------------------------------
-  # NVIDIA Device Plugin Add-on
-  #---------------------------------------------------------------
-  enable_nvidia_device_plugin = true
-  nvidia_device_plugin_helm_config = {
-    version = "v0.17.1"
-    name    = "nvidia-device-plugin"
-    values = [
-      <<-EOT
-        nodeSelector:
-          accelerator: nvidia
-        gfd:
-          enabled: true
-        nfd:
-          gc:
-            nodeSelector:
-              accelerator: nvidia
-          topologyUpdater:
-            nodeSelector:
-              accelerator: nvidia
-          worker:
-            nodeSelector:
-              accelerator: nvidia
-            tolerations:
-              - key: nvidia.com/gpu
-                operator: Exists
-                effect: NoSchedule
-              - operator: "Exists"
-      EOT
-    ]
-  }
 
   #---------------------------------------
   # EFA Device Plugin Add-on
