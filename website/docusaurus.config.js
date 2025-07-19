@@ -43,9 +43,21 @@ const config = {
     ],
   ],
 
+  themes: ['@docusaurus/theme-mermaid'],
+  
+  markdown: {
+    mermaid: true,
+  },
+
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      mermaid: {
+        theme: { light: 'neutral', dark: 'forest' },
+        options: {
+          maxTextSize: 50000,
+        },
+      },
       navbar: {
         // title: 'AIoEKS',
         logo: {
@@ -84,6 +96,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+        additionalLanguages: ['bash', 'yaml', 'hcl', 'json', 'python', 'javascript', 'typescript', 'jsx', 'tsx'],
       },
     }),
 
