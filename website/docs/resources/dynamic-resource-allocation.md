@@ -24,9 +24,9 @@ import Admonition from '@theme/Admonition';
 
 **📋 Implementation Prerequisites:**
 - ✅ **Amazon EKS v1.33+** with [DRA feature gates](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/) (enabled by default in AL2023 and Bottlerocket GPU AMIs)
-- ✅ **Managed or Self-Managed Node Groups**  
+- ✅ **Managed or Self-Managed Node Groups**
   ❌ **Karpenter not supported yet** ([open issue](https://github.com/kubernetes-sigs/karpenter/issues/1231))
-- ✅ [**NVIDIA GPU Operator**](https://github.com/NVIDIA/gpu-operator) + [**NVIDIA DRA Driver**](https://github.com/NVIDIA/k8s-dra-driver-gpu)  
+- ✅ [**NVIDIA GPU Operator**](https://github.com/NVIDIA/gpu-operator) + [**NVIDIA DRA Driver**](https://github.com/NVIDIA/k8s-dra-driver-gpu)
   (Device plugin alone is insufficient)
 - ✅ **No manual NVIDIA driver install needed** on official EKS AMIs
 
@@ -98,19 +98,19 @@ end
 %% --- DRA Model ---
 subgraph DRA ["🟢 Dynamic Resource Allocation"]
     direction TB
-    
+
     %% Spacer for title
     D_Spacer[" "]
-    
+
     %% User Intent
     D_Pod1["🚀 Pod A<br/>Inference Workload"]
     D_Pod2["🚀 Pod B<br/>Training Workload"]
-    
+
     %% Templates and Claims
     D_Template["📄 ResourceClaimTemplate<br/>Defines GPU Requirements"]
     D_RC1["📋 ResourceClaim A<br/>Generated for Pod A"]
     D_RC2["📋 ResourceClaim B<br/>Generated for Pod B"]
-    
+
     %% Core Components
     D_DeviceClass["🏷️ DeviceClass<br/>gpu.nvidia.com"]
     D_ResourceSlice["📊 ResourceSlice<br/>Advertises Available GPUs"]
@@ -125,12 +125,12 @@ subgraph DRA ["🟢 Dynamic Resource Allocation"]
     D_Pod2 --> D_Template
     D_Template --> D_RC1
     D_Template --> D_RC2
-    
+
     D_DeviceClass --> D_ResourceSlice
     D_RC1 --> D_Scheduler
     D_RC2 --> D_Scheduler
     D_ResourceSlice --> D_Scheduler
-    
+
     D_Scheduler --> D_Driver
     D_Driver --> D_GPU
 end
@@ -187,11 +187,11 @@ DRA fundamentally changes how Kubernetes manages GPU resources through sophistic
 #### 1. Resource Discovery and Advertisement
 When NVIDIA DRA driver starts, it discovers available GPUs on each node and creates **ResourceSlices** that advertise device capabilities to the Kubernetes API server.
 
-#### 2. DeviceClass Registration  
+#### 2. DeviceClass Registration
 The driver registers one or more `DeviceClass` objects to logically group GPU resources:
 
 - `gpu.nvidia.com`: Standard GPU resources
-- `mig.nvidia.com`: Multi-Instance GPU partitions  
+- `mig.nvidia.com`: Multi-Instance GPU partitions
 - `compute-domain.nvidia.com`: Cross-node GPU coordination
 
 #### 3. Resource Claim Creation
@@ -224,7 +224,7 @@ On the selected node, the DRA driver:
 Ensure that you have installed the following tools on your machine:
 
 - **aws cli** - AWS Command Line Interface
-- **kubectl** - Kubernetes command-line tool  
+- **kubectl** - Kubernetes command-line tool
 - **terraform** - Infrastructure as Code tool
 
 ### Deploy
@@ -257,7 +257,7 @@ enable_nvidia_gpu_operator       = true
 :::tip Automated Setup
 The NVIDIA GPU Operator includes all necessary components:
 - NVIDIA Device Plugin
-- DCGM Exporter  
+- DCGM Exporter
 - MIG Manager
 - GPU Feature Discovery
 - Node Feature Discovery
@@ -306,7 +306,7 @@ graph TB
         H[Node Feature Discovery]
         I[GPU Feature Discovery]
     end
-    
+
     A --> D
     D --> B
     D --> C
@@ -315,7 +315,7 @@ graph TB
     B --> G
     B --> H
     B --> I
-    
+
     style A fill:#e8f5e8
     style B fill:#f3e5f5
     style C fill:#e1f5fe
@@ -423,7 +423,7 @@ kubectl get pods -n timeslicing-gpu -w
 
 **Best For:**
 - Inference workloads with sporadic GPU usage
-- Development and testing environments  
+- Development and testing environments
 - Workloads with different peak usage times
 - Applications that don't require memory isolation
 
@@ -551,13 +551,13 @@ kubectl get pods -n mig-gpu -w
 
 ### Strategy Selection Guide
 
-| Workload Type | Recommended Strategy | Key Benefit | 
+| Workload Type | Recommended Strategy | Key Benefit |
 |---------------|---------------------|-------------|
-| **Small Inference Jobs** | Time-slicing or MPS | Higher GPU utilization | 
+| **Small Inference Jobs** | Time-slicing or MPS | Higher GPU utilization |
 | **Concurrent Small Models** | MPS | True parallelism |
-| **Production Multi-tenant** | MIG | Hardware isolation | 
-| **Large Model Training** | Basic Allocation | Maximum performance | 
-| **Development/Testing** | Time-slicing | Flexibility and simplicity | 
+| **Production Multi-tenant** | MIG | Hardware isolation |
+| **Large Model Training** | Basic Allocation | Maximum performance |
+| **Development/Testing** | Time-slicing | Flexibility and simplicity |
 
 ---
 
