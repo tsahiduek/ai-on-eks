@@ -11,6 +11,8 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --help)
+      echo "Usage: $0 [OPTIONS]"
+      echo "      --skip-setup    Use previously set image_repository, image_tag, and ssh_key values in blueprint.tfvars"
       echo "Bubbling up help from setup.sh..."
       ./setup.sh --help
       exit 0
@@ -19,7 +21,7 @@ while [[ $# -gt 0 ]]; do
       SETUP_ARGS="$SETUP_ARGS $1 $2"
       shift 2
       ;;
-    --skip-build|--skip-repo)
+    --skip-build)
       SETUP_ARGS="$SETUP_ARGS $1"
       shift
       ;;
@@ -43,6 +45,23 @@ else
     exit 1
   fi
 fi
+
+# Get the IP address
+IP_ADDRESS="$(curl -s https://checkip.amazonaws.com)"
+echo "Using IP address $IP_ADDRESS to secure NLB source range"
+
+# Set the values in slurm-login-annotations.tf (cross-platform sed)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' \
+      -e "s|\"service.beta.kubernetes.io/load-balancer-source-ranges\".*= \".*\"|\"service.beta.kubernetes.io/load-balancer-source-ranges\" = \"${IP_ADDRESS}/32\"|" \
+      terraform/slurm-login-annotations.tf
+else
+    # Linux
+    sed -i \
+      -e "s|\"service.beta.kubernetes.io/load-balancer-source-ranges\".*= \".*\"|\"service.beta.kubernetes.io/load-balancer-source-ranges\" = \"${IP_ADDRESS}/32\"|" \
+      terraform/slurm-login-annotations.tf
+fi 
 
 # Copy the base into the folder
 mkdir -p ./terraform/_LOCAL

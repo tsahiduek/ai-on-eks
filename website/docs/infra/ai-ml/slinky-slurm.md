@@ -101,8 +101,7 @@ To customize this behavior, you can add the following optional flags:
 |`--tag`|The image tag |25.05.0-ubuntu24.04|
 |`--region`| The AWS region of your ECR repository | inferred from the AWS CLI configuration or set to `us-west-2`|
 |`--skip-build`| Set if using an existing image already in ECR | `false`|
-|`--skip-repo`| Set if targeting an existing ECR repository for a new image build |`false`|
-|`--skip-setup`| Set if you manually added `image_repository`, `image_tag`, and `ssh_key` values in `infra/slinky-slurm/terraform/blueprint.tfvars`|`false`| 
+|`--skip-setup`| Set if you previously added `image_repository`, `image_tag`, and `ssh_key` values in `infra/slinky-slurm/terraform/blueprint.tfvars`|`false`| 
 |`--help`| View flag options |`false`|
 
 For example, if you've already built and pushed a custom slurmd container image to a custom ECR repository, add the following flags and values:
@@ -113,6 +112,8 @@ cd ai-on-eks/infra/slinky-slurm
 The script will then validate that the container image exists in your ECR repo before proceeding. 
 
 If you wish to use a custom Dockerfile, simply overwrite the contents of the `infra/slinky-slurm/dlc-slurmd.Dockerfile` before executing `infra/slinky-slurm/install.sh`. 
+
+If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `infra/slinky-slurm/setup.sh` script directly using the same flags. 
 
 **4. Trigger deployment:**
 
@@ -199,6 +200,9 @@ statefulset.apps/slurm-mariadb      1/1     40m
 **1. Access the Slurm login Pod:**
 
 SSH into the login pod: 
+:::info 
+For this demonstration, the `slurm-login` service has been dynamically annotated using `service.beta.kubernetes.io/load-balancer-source-ranges` to restrict access to the Network Load Balancer with your IP address only. The AWS Load Balancer Controller achieves this by modifying inbound security group rules. For more information see the documentation on [access control annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.13/guide/ingress/annotations/#access-control). 
+:::
 ```
 SLURM_LOGIN_HOSTNAME="$(kubectl get services \
  -n slurm -l app.kubernetes.io/instance=slurm,app.kubernetes.io/name=login \
@@ -358,7 +362,7 @@ Make a new directory for your checkpoints
 mkdir -p checkpoints
 ```
 :::info
-By default the `llama2_7b-training.sbatch` batch training script is configured to distribute the FSDP workload across 4 nodes. The Slurm NodeSet maps to the `g5-gpu-karpenter` NodePool via a `NodeSelector.instanceType` value. If Karpenter is unable to find 4 on-demand or spot instances, you may need to make adjustment to the batch training script, then upload a new copy to your provisioned S3 bucket, which will sync it to the FSx for Lustre file system:
+By default the `llama2_7b-training.sbatch` batch training script is configured to distribute the FSDP workload across 4 nodes. The Slurm NodeSet maps to the `g5-gpu-karpenter` NodePool via a `NodeSelector.instanceType` value. If Karpenter is unable to find 4 on-demand or spot instances, you may need to make adjustment to the batch training script, then upload a new copy to your provisioned S3 bucket, which will sync it to the FSx for Lustre file system via a [data repository association](https://docs.aws.amazon.com/fsx/latest/LustreGuide/create-dra-linked-data-repo.html):
 ```
 cd terraform/_LOCAL
 S3_BUCKET_NAME=$(terraform output -raw fsx_s3_bucket_name)

@@ -325,13 +325,34 @@ variable "enable_nvidia_dcgm_exporter" {
   default     = true
 }
 
+# AWS Load Balancer Controller Variables
+variable "enable_aws_load_balancer_controller" {
+  description = "Enable the AWS Load Balancer Controller" 
+  type        = bool
+  default     = true
+}
+
+variable "enable_service_mutator_webhook" {
+  description = "Enable service-mutator webhook for AWS Load Balancer Controller"
+  type        = bool
+  default     = false
+}
+
+variable "enable_ingress_nginx" {
+  description = "Enable ingress-nginx addon"
+  type        = bool
+  default     = true
+}
+
 # Slinky Slurm Specific Variables
+# Cert Manager 
 variable "enable_cert_manager" {
   description = "Enable cert-manager addon"
   type        = bool
   default     = false
 }
 
+# Slinky Slurm Specific Variables
 variable "enable_slurm_operator" {
   description = "Enable slurm-operator addon"
   type        = bool
@@ -360,16 +381,4 @@ variable "ssh_key" {
   description = "SSH key for login pod access"
   type        = string
   default     = ""
-}
-
-variable "enable_ingress_nginx" {
-  description = "Enable ingress-nginx addon"
-  type        = bool
-  default     = true
-}
-
-variable "enable_service_mutator_webhook" {
-  description = "Enable service-mutator webhook for AWS Load Balancer Controller"
-  type        = bool
-  default     = false
 }

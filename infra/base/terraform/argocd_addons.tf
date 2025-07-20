@@ -79,57 +79,43 @@ resource "kubectl_manifest" "nvidia_dcgm_exporter" {
 }
 
 resource "kubectl_manifest" "cert_manager_yaml" {
-  count     = var.enable_cert_manager ? 1 : 0
-  yaml_body = file("${path.module}/argocd-addons/cert-manager.yaml")
-
+  count     = var.enable_cert_manager || var.enable_slurm_operator || var.enable_slurm_cluster ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/slinky-slurm/cert-manager.yaml")
+  
   depends_on = [
     module.eks_blueprints_addons
   ]
 }
 
-resource "kubernetes_secret" "argocd_bitnami_repo" {
-  count     = var.enable_slurm_cluster ? 1 : 0
-  metadata {
-    name      = "argocd-bitnami-repo"
-    namespace = "argocd"
-    labels = {
-      "argocd.argoproj.io/secret-type" = "repository"
+resource "null_resource" "wait_for_cert_manager" {
+  count = var.enable_slurm_operator || var.enable_slurm_cluster ? 1 : 0
+  provisioner "local-exec" {
+     environment = {
+      KUBECONFIG = pathexpand("~/.kube/config")
     }
+    command = <<-EOT
+      set -e 
+      aws eks --region ${var.region} update-kubeconfig --name ${var.name}
+      bash ${path.module}/argocd-addons/slinky-slurm/wait-for-cert-manager.sh
+    EOT
   }
-  data = {
-    type      = "helm"
-    name      = "bitnami"
-    enableOCI = "true"
-    url       = "registry-1.docker.io/bitnamicharts"
-  }
-  depends_on = [
-    module.eks_blueprints_addons
-  ]
-}
-
-resource "kubernetes_secret" "argocd_metrics_server_repo" {
-  count     = var.enable_slurm_cluster ? 1 : 0
-  metadata {
-    name      = "argocd-metrics-server-repo"
-    namespace = "argocd"
-    labels = {
-      "argocd.argoproj.io/secret-type" = "repository"
-    }
-  }
-  data = {
-    type      = "helm"
-    name      = "metrics-server"
-    enableOCI = "false"
-    url       = "https://kubernetes-sigs.github.io/metrics-server/"
-  }
-  depends_on = [
-    module.eks_blueprints_addons
-  ]
+  depends_on = [kubectl_manifest.cert_manager_yaml]
 }
 
 resource "kubectl_manifest" "slurm_operator_yaml" {
-  count     = var.enable_slurm_operator ? 1 : 0
+  count     = var.enable_slurm_operator || var.enable_slurm_cluster ? 1 : 0
   yaml_body = file("${path.module}/argocd-addons/slinky-slurm/slurm-operator.yaml")
+
+  depends_on = [
+    module.eks_blueprints_addons,
+    kubectl_manifest.cert_manager_yaml,
+    null_resource.wait_for_cert_manager
+  ]
+}
+
+resource "kubectl_manifest" "priority_class" {
+  count     = var.enable_slurm_cluster ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/slinky-slurm/slurm-node-priority-class.yaml")
 
   depends_on = [
     module.eks_blueprints_addons
@@ -149,8 +135,6 @@ resource "kubectl_manifest" "slurm_cluster_yaml" {
   depends_on = [
     module.eks_blueprints_addons,
     kubectl_manifest.slurm_operator_yaml,
-    kubectl_manifest.priority_class,
-    kubernetes_secret.argocd_bitnami_repo,
-    kubernetes_secret.argocd_metrics_server_repo,
+    kubectl_manifest.priority_class
   ]
 }

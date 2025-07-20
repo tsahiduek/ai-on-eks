@@ -50,6 +50,7 @@ Each stack inherits the `base` stack's components. These components include:
 | `enable_aws_efa_k8s_device_plugin`       | Enable the AWS EFA device plugin                    | `false`                  |
 | `enable_aws_fsx_csi_driver`              | Enable the FSx device plugin                        | `false`                  |
 | `deploy_fsx_volume`                      | Deploy a simple FSx volume                          | `false`                  |
+| `fsx_pvc_namespace`                      | Namespace to provision the FSx PVC                  | `default`                |
 | `enable_amazon_prometheus`               | Enable Amazon Managed Prometheus                    | `false`                  |
 | `enable_amazon_emr`                      | Set up Amazon EMR                                   | `false`                  |
 | `enable_kube_prometheus_stack`           | Enable the Kube Prometheus addon                    | `false`                  |
@@ -68,8 +69,10 @@ Each stack inherits the `base` stack's components. These components include:
 | `enable_mpi_operator`                    | Enable the MPI Operator                             | `false`                  |
 | `enable_aibrix_stack`                    | Enable the AIBrix stack                             | `false`                  |
 | `aibrix_stack_version`                   | AIBrix Stack version                                | `v0.2.1`                 |
-| `enable_slurm_operator`                  | Enable deployment of the Slinky Slurm Operator      | `false`                  |
-| `enable_slurm_cluster`                   | Enable deployment of the Slinky Slurm Cluster       | `false`                  |
+| `enable_aws_load_balancer_controller`    | Enable the AWS Load Balancer Controller             | `true`                   |
+| `enable_service_mutator_webhook`         | Enable service-mutator webhook for AWS Load Balancer Controller | `false`      |
+| `enable_ingress_nginx`                   | Enable ingress-nginx addon                          | `true`                   |
+| `enable_cert_manager`                    | Enable Cert Manager                                 | `false`                  |
 
 ### JupyterHub
 
@@ -82,6 +85,16 @@ Each stack inherits the `base` stack's components. These components include:
 | `oauth_jupyter_client_id`     | oauth clientid for JupyterHub. Only used for oauth                                    | `""`    |
 | `oauth_jupyter_client_secret` | oauth client secret. Only used for oauth                                              | `""`    |
 | `oauth_username_key`          | oauth field for username (e.g. `preferred_username`). Only needed for oauth           | `""`    |
+
+### Slurm on EKS
+
+| Variable Name                            | Description                                         | Default                  |
+|------------------------------------------|-----------------------------------------------------|--------------------------|
+| `enable_slurm_operator`                  | Enable the Slinky Slurm Operator (with Cert Manager)|  `false`                 |
+| `enable_slurm_cluster`                   | Enable the Slinky Slurm Cluster  (with Slurm Operator)| `false`                |
+| `image_repository`                       | Amazon ECR container image URI used for the slurmd NodeSet|     `""`           |
+| `image_tag`                              | Container image tag used for the slurmd NodeSet| `""`|
+| `ssh_key`                                | Public SSH key for accessing slurm-login service| `""`|
 
 ## Custom Stacks
 
