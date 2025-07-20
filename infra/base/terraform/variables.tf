@@ -327,7 +327,7 @@ variable "enable_nvidia_dcgm_exporter" {
 
 # AWS Load Balancer Controller Variables
 variable "enable_aws_load_balancer_controller" {
-  description = "Enable the AWS Load Balancer Controller" 
+  description = "Enable the AWS Load Balancer Controller"
   type        = bool
   default     = true
 }
@@ -338,13 +338,13 @@ variable "enable_service_mutator_webhook" {
   default     = false
 }
 
+# Ingress-Nginx Controller
 variable "enable_ingress_nginx" {
   description = "Enable ingress-nginx addon"
   type        = bool
   default     = true
 }
 
-# Slinky Slurm Specific Variables
 # Cert Manager 
 variable "enable_cert_manager" {
   description = "Enable cert-manager addon"

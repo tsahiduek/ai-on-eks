@@ -12,13 +12,13 @@ Deployment of ML models on EKS requires access to GPUs or Neuron instances. If y
 
 ### What is Slurm?
 
-[Slurm](https://slurm.schedmd.com/overview.html) is an open-source, highly scalable workload manager and job scheduler designed for managing compute resources on compute clusters of all sizes. It provides three core functions: allocating access to compute resources, providing a framework for launching and monitoring parallel computing jobs, and managing queues of pending work to resolve resource contention. 
+[Slurm](https://slurm.schedmd.com/overview.html) is an open-source, highly scalable workload manager and job scheduler designed for managing compute resources on compute clusters of all sizes. It provides three core functions: allocating access to compute resources, providing a framework for launching and monitoring parallel computing jobs, and managing queues of pending work to resolve resource contention.
 
-Slurm is widely used in AI training to manage and schedule large-scale, GPU-accelerated workloads across high-performance computing clusters. It allows researchers and engineers to efficiently allocate computing resources, including CPUs, GPUs and memory, enabling distributed training of deep learning models and large language models by spanning jobs across many nodes with fine-grained control over resource types and job priorities. Slurm’s reliability, advanced scheduling features, and integration with both on-premise and cloud environments make it a preferred choice for handling the scale, throughput, and reproducibility that modern AI research and industry demand. 
+Slurm is widely used in AI training to manage and schedule large-scale, GPU-accelerated workloads across high-performance computing clusters. It allows researchers and engineers to efficiently allocate computing resources, including CPUs, GPUs and memory, enabling distributed training of deep learning models and large language models by spanning jobs across many nodes with fine-grained control over resource types and job priorities. Slurm’s reliability, advanced scheduling features, and integration with both on-premise and cloud environments make it a preferred choice for handling the scale, throughput, and reproducibility that modern AI research and industry demand.
 
-### What is the Slinky Project? 
+### What is the Slinky Project?
 
-The [Slinky Project](https://github.com/SlinkyProject) is an open-source suite of integration tools designed by [SchedMD](https://www.schedmd.com/) (the lead developers of Slurm) to bring Slurm capabilities into Kubernetes, combining the best of both worlds for efficient resource management and scheduling. The Slinky Project includes a [Kubernetes operator for Slurm clusters](https://github.com/SlinkyProject/slurm-operator?tab=readme-ov-file#kubernetes-operator-for-slurm-clusters), which implements [custom-controllers](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers) and [custom resource definitions (CRDs)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions) to manage the lifecycle of Slurm Cluster and NodeSet resources deployed within a Kubernetes environment. 
+The [Slinky Project](https://github.com/SlinkyProject) is an open-source suite of integration tools designed by [SchedMD](https://www.schedmd.com/) (the lead developers of Slurm) to bring Slurm capabilities into Kubernetes, combining the best of both worlds for efficient resource management and scheduling. The Slinky Project includes a [Kubernetes operator for Slurm clusters](https://github.com/SlinkyProject/slurm-operator?tab=readme-ov-file#kubernetes-operator-for-slurm-clusters), which implements [custom-controllers](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-controllers) and [custom resource definitions (CRDs)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#customresourcedefinitions) to manage the lifecycle of Slurm Cluster and NodeSet resources deployed within a Kubernetes environment.
 
 This Slurm cluster includes the following components:
 | Component | Description |
@@ -32,13 +32,13 @@ This Slurm cluster includes the following components:
 | MariaDB | The database backend used by the accounting service to store job, user, and project information. |
 | Slurm Exporter | Collects and exports Slurm metrics for monitoring purposes. |
 
-When paired with Amazon EKS, the Slinky Project unlocks the ability for enterprises who have standardized infrastructure management on Kubernetes to deliver a Slurm-based experience to their ML scientists. It also enables training, experimentation, and inference to happen on the same cluster of accelerated nodes. 
+When paired with Amazon EKS, the Slinky Project unlocks the ability for enterprises who have standardized infrastructure management on Kubernetes to deliver a Slurm-based experience to their ML scientists. It also enables training, experimentation, and inference to happen on the same cluster of accelerated nodes.
 
-### Slurm on EKS Architecture 
+### Slurm on EKS Architecture
 
 ![alt text](img/Slurm-on-EKS.png)
 
-The diagram above depicts the Slurm on EKS deployment outlined in this guide. An Amazon EKS cluster acts as an orchestration layer, with core Slurm Cluster components hosted on a managed node group of m5.xlarge instances, while a Karpenter NodePool manages the deployment of GPU accelerated compute nodes for the slurmd pods to run on. The Slinky Slurm operator and Slurm cluster are automatically deployed as ArgoCD applications. 
+The diagram above depicts the Slurm on EKS deployment outlined in this guide. An Amazon EKS cluster acts as an orchestration layer, with core Slurm Cluster components hosted on a managed node group of m5.xlarge instances, while a Karpenter NodePool manages the deployment of GPU accelerated compute nodes for the slurmd pods to run on. The Slinky Slurm operator and Slurm cluster are automatically deployed as ArgoCD applications.
 
 The login LoadBalancer type service is annotated to dynamically create an AWS Network Load Balancer using the [AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller), allowing ML scientists to SSH into the login pod without interfacing with the Kubernetes API server via kubectl.
 
@@ -47,18 +47,18 @@ The login and slurmd pods also have an [Amazon FSx for Lustre](https://aws.amazo
 ### Key Features and Benefits
 
 - Run Slurm workloads side by side with containerized Kubernetes applications on the same infrastructure. Both Slurm and Kubernetes workloads can be scheduled on the same node pools, increasing utilization and avoiding resource fragmentation.
-- Manage both Slurm jobs and Kubernetes pods seamlessly, leveraging familiar tooling from both ecosystems without sacrificing control or performance. 
-- Dynamically add or removes compute nodes in response to workload demand, autoscaling allocated resources efficiently, handling spikes and lulls in demand to reduce infrastructure costs and idle resource waste. 
+- Manage both Slurm jobs and Kubernetes pods seamlessly, leveraging familiar tooling from both ecosystems without sacrificing control or performance.
+- Dynamically add or removes compute nodes in response to workload demand, autoscaling allocated resources efficiently, handling spikes and lulls in demand to reduce infrastructure costs and idle resource waste.
 - High-availability through Kubernetes orchestration. If a controller or worker pod fails, Kubernetes automatically restarts it, reducing manual intervention.
-- Slurm’s sophisticated scheduling features (fair-share allocation, dependency management, priority scheduling) are integrated into Kubernetes, maximizing compute utilization and aligning resources with workload requirements. 
-- Slurm and its dependencies are deployed as containers, ensuring consistent deployments across environments. This reduces configuration drift and streamlines dev-to-prod transitions. 
-- Users can build Slurm images tailored to specialized needs (e.g., custom dependencies, libraries), promoting consistency and repeatability in scientific or regulated environments. 
+- Slurm’s sophisticated scheduling features (fair-share allocation, dependency management, priority scheduling) are integrated into Kubernetes, maximizing compute utilization and aligning resources with workload requirements.
+- Slurm and its dependencies are deployed as containers, ensuring consistent deployments across environments. This reduces configuration drift and streamlines dev-to-prod transitions.
+- Users can build Slurm images tailored to specialized needs (e.g., custom dependencies, libraries), promoting consistency and repeatability in scientific or regulated environments.
 - Administrators can define custom Slurm clusters and node sets directly using Kubernetes Custom Resources, including partitioning compute nodes for different types of jobs (e.g., stable vs. opportunistic/backfill partitions)
-- Slinky integrates with monitoring stacks for both Slurm and Kubernetes, providing robust metrics and visualization for administrators and users. 
+- Slinky integrates with monitoring stacks for both Slurm and Kubernetes, providing robust metrics and visualization for administrators and users.
 
 <CollapsibleContent header={<h2><span>Deploying the Solution</span></h2>}>
 
-In this example, you will provision a Slinky Slurm cluster on Amazon EKS. 
+In this example, you will provision a Slinky Slurm cluster on Amazon EKS.
 
 **0. Prerequisites:**
 
@@ -88,11 +88,11 @@ set your `export AWS_PROFILE="<PROFILE_name>"` to the desired profile name
 
 **3. Review the slurmd container image build automation:**
 
-By default, the `infra/slinky-slurm/install.sh` script will trigger setup steps to automatically build a new slurmd container image using the `infra/slinky-slurm/dlc-slurmd.Dockerfile`, which builds on top of an [AWS Deep Learning Container (DLC)](https://github.com/aws/deep-learning-containers) to include Python 3.12.8 + PyTorch 2.6.0 + CUDA 12.6 + NCCL 2.23.4 + EFA Installer 1.38.0 (bundled with OFI NCCL plugin) pre-installed in the container image. 
+By default, the `infra/slinky-slurm/install.sh` script will trigger setup steps to automatically build a new slurmd container image using the `infra/slinky-slurm/dlc-slurmd.Dockerfile`, which builds on top of an [AWS Deep Learning Container (DLC)](https://github.com/aws/deep-learning-containers) to include Python 3.12.8 + PyTorch 2.6.0 + CUDA 12.6 + NCCL 2.23.4 + EFA Installer 1.38.0 (bundled with OFI NCCL plugin) pre-installed in the container image.
 
-It will then create a new ECR repository and push this image to the repository. If not already present on your machine, a new SSH key `~/.ssh/id_ed25519_slurm` will be created for Slurm login pod access as well. 
+It will then create a new ECR repository and push this image to the repository. If not already present on your machine, a new SSH key `~/.ssh/id_ed25519_slurm` will be created for Slurm login pod access as well.
 
-The image repository URI, image tag, and public SSH key are then set in `infra/slinky-slurm/terraform/blueprint.tfvars` to be used in the deployment of the Slurm cluster ArgoCD application. 
+The image repository URI, image tag, and public SSH key are then set in `infra/slinky-slurm/terraform/blueprint.tfvars` to be used in the deployment of the Slurm cluster ArgoCD application.
 
 To customize this behavior, you can add the following optional flags:
 | Component | Description | Default Value|
@@ -101,19 +101,19 @@ To customize this behavior, you can add the following optional flags:
 |`--tag`|The image tag |25.05.0-ubuntu24.04|
 |`--region`| The AWS region of your ECR repository | inferred from the AWS CLI configuration or set to `us-west-2`|
 |`--skip-build`| Set if using an existing image already in ECR | `false`|
-|`--skip-setup`| Set if you previously added `image_repository`, `image_tag`, and `ssh_key` values in `infra/slinky-slurm/terraform/blueprint.tfvars`|`false`| 
+|`--skip-setup`| Set if you previously added `image_repository`, `image_tag`, and `ssh_key` values in `infra/slinky-slurm/terraform/blueprint.tfvars`|`false`|
 |`--help`| View flag options |`false`|
 
 For example, if you've already built and pushed a custom slurmd container image to a custom ECR repository, add the following flags and values:
 ```
 cd ai-on-eks/infra/slinky-slurm
 ./install.sh --repo-name my-custom-repo --tag my-custom-tag --skip-build
-``` 
-The script will then validate that the container image exists in your ECR repo before proceeding. 
+```
+The script will then validate that the container image exists in your ECR repo before proceeding.
 
-If you wish to use a custom Dockerfile, simply overwrite the contents of the `infra/slinky-slurm/dlc-slurmd.Dockerfile` before executing `infra/slinky-slurm/install.sh`. 
+If you wish to use a custom Dockerfile, simply overwrite the contents of the `infra/slinky-slurm/dlc-slurmd.Dockerfile` before executing `infra/slinky-slurm/install.sh`.
 
-If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `infra/slinky-slurm/setup.sh` script directly using the same flags. 
+If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `infra/slinky-slurm/setup.sh` script directly using the same flags.
 
 **4. Trigger deployment:**
 
@@ -133,7 +133,7 @@ Update your local kubeconfig to access your kubernetes cluster:
 aws eks update-kubeconfig --name slurm-on-eks
 ```
 
-Verify the deployment status of the Slinky Slurm Operator: 
+Verify the deployment status of the Slinky Slurm Operator:
 ```
 kubectl get all -n slinky
 ```
@@ -155,7 +155,7 @@ replicaset.apps/slurm-operator-bb5c58dc6           1         1         1       4
 replicaset.apps/slurm-operator-webhook-87bc59884   1         1         1       41m
 ```
 
-Verify the deployment status the Slurm Cluster: 
+Verify the deployment status the Slurm Cluster:
 ```
 kubectl get all -n slurm
 ```
@@ -199,9 +199,9 @@ statefulset.apps/slurm-mariadb      1/1     40m
 ```
 **1. Access the Slurm login Pod:**
 
-SSH into the login pod: 
-:::info 
-For this demonstration, the `slurm-login` service has been dynamically annotated using `service.beta.kubernetes.io/load-balancer-source-ranges` to restrict access to the Network Load Balancer with your IP address only. The AWS Load Balancer Controller achieves this by modifying inbound security group rules. For more information see the documentation on [access control annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.13/guide/ingress/annotations/#access-control). 
+SSH into the login pod:
+:::info
+For this demonstration, the `slurm-login` service has been dynamically annotated using `service.beta.kubernetes.io/load-balancer-source-ranges` to restrict access to the Network Load Balancer with your IP address only. The AWS Load Balancer Controller achieves this by modifying inbound security group rules. For more information see the documentation on [access control annotations](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.13/guide/ingress/annotations/#access-control).
 :::
 ```
 SLURM_LOGIN_HOSTNAME="$(kubectl get services \
@@ -210,16 +210,16 @@ SLURM_LOGIN_HOSTNAME="$(kubectl get services \
 
 ssh -i ~/.ssh/id_ed25519_slurm -p 22 root@$SLURM_LOGIN_HOSTNAME
 ```
-Check the available nodes: 
+Check the available nodes:
 ```
-sinfo 
+sinfo
 ```
 ```
 PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
 node         up   infinite      4   idle node-[0-3]
 all*         up   infinite      4   idle node-[0-3]
 ```
-Verify that the Amazon FSx for Lustre shared file system is mounted to the login pod: 
+Verify that the Amazon FSx for Lustre shared file system is mounted to the login pod:
 ```
 df -h
 ```
@@ -236,17 +236,17 @@ tmpfs                      15G   12K   15G   1% /etc/ssh/ssh_host_rsa_key
 tmpfs                     7.7G     0  7.7G   0% /proc/acpi
 tmpfs                     7.7G     0  7.7G   0% /sys/firmware
 ```
-Exit back to your machine: 
+Exit back to your machine:
 ```
 exit
 ```
 **2. Access a Slurm Compute Pod:**
 
-Open an interactive terminal session with one of the slurm compute nodes: 
+Open an interactive terminal session with one of the slurm compute nodes:
 ```
 kubectl -n slurm exec -it pod/slurm-compute-node-0 -- bash --login
 ```
-Verify that the Amazon FSx for Lustre shared file system is mounted to the login pod: 
+Verify that the Amazon FSx for Lustre shared file system is mounted to the login pod:
 ```
 df -h
 ```
@@ -283,7 +283,7 @@ ldconfig -v | grep "libnccl.so" | tail -n1 | sed -r 's/^.*\.so\.//'
 ```
 Check EFA availability:
 ```
-fi_info -p efa 
+fi_info -p efa
 ```
 ```
 provider: efa
@@ -299,14 +299,14 @@ provider: efa
     type: FI_EP_DGRAM
     protocol: FI_PROTO_EFA
 ```
-Check the libfabric libraries: 
+Check the libfabric libraries:
 ```
 ls /opt/amazon/efa/lib
 ```
 ```
 libfabric.a  libfabric.so  libfabric.so.1  libfabric.so.1.25.0  pkgconfig
 ```
-Check the OFI NCCL plugin libraries: 
+Check the OFI NCCL plugin libraries:
 ```
 ls /opt/amazon/ofi-nccl/lib/x86_64-linux-gnu
 ```
@@ -321,7 +321,7 @@ nvidia-smi topo -m
 	GPU0	CPU Affinity	NUMA Affinity	GPU NUMA ID
 GPU0	 X 	0-31	0		N/A
 ```
-Exit back to your machine: 
+Exit back to your machine:
 ```
 exit
 ```
@@ -331,7 +331,7 @@ exit
 
 **0. Stage Training Artifacts:**
 
-SSH into the login pod: 
+SSH into the login pod:
 ```
 SLURM_LOGIN_HOSTNAME="$(kubectl get services \
  -n slurm -l app.kubernetes.io/instance=slurm,app.kubernetes.io/name=login \
@@ -342,8 +342,8 @@ ssh -i ~/.ssh/id_ed25519_slurm -p 22 root@$SLURM_LOGIN_HOSTNAME
 Install Git on the login pod:
 ```
 apt update
-apt install -y git 
-git --version 
+apt install -y git
+git --version
 ```
 Change directories into the FSx mount:
 ```
@@ -353,7 +353,7 @@ Clone the [awsome-distributed-training](https://github.com/aws-samples/awsome-di
 ```
 git clone https://github.com/aws-samples/awsome-distributed-training/
 ```
-Change into the FSDP for Slurm example directory: 
+Change into the FSDP for Slurm example directory:
 ```
 cd awsome-distributed-training/3.test_cases/pytorch/FSDP/slurm
 ```
@@ -368,27 +368,27 @@ cd terraform/_LOCAL
 S3_BUCKET_NAME=$(terraform output -raw fsx_s3_bucket_name)
 cd ../../
 aws s3 cp examples/llama2_7b-training.sbatch s3://${S3_BUCKET_NAME}/
-``` 
+```
 :::
 
-Copy the `llama2_7b-training.sbatch` batch training script into the FSDP for Slurm example directory: 
+Copy the `llama2_7b-training.sbatch` batch training script into the FSDP for Slurm example directory:
 ```
 cp /fsx/data/llama2_7b-training.sbatch ./llama2_7b-training.sbatch
 ```
 **1. Configure Hugging Face Access Token:**
 
-Create a new [Hugging Face](https://huggingface.co/) read [user access token](https://huggingface.co/docs/hub/en/security-tokens) to stream the [allenai/c4](https://huggingface.co/datasets/allenai/c4) dataset without throttling. 
+Create a new [Hugging Face](https://huggingface.co/) read [user access token](https://huggingface.co/docs/hub/en/security-tokens) to stream the [allenai/c4](https://huggingface.co/datasets/allenai/c4) dataset without throttling.
 
-Inject the new Hugging Face token into the training script: 
+Inject the new Hugging Face token into the training script:
 ```
 NEW_TOKEN="<you-token-here>"
 ```
 ```
 sed -i "s/export HF_TOKEN=.*$/export HF_TOKEN=$NEW_TOKEN/" llama2_7b-training.sbatch
 ```
-**2. Start the training job:** 
+**2. Start the training job:**
 
-Submit the batch training script to the Slurm Controller using the [sbatch](https://slurm.schedmd.com/sbatch.html) command: 
+Submit the batch training script to the Slurm Controller using the [sbatch](https://slurm.schedmd.com/sbatch.html) command:
 ```
 sbatch llama2_7b-training.sbatch
 ```
@@ -473,14 +473,14 @@ drwxr-xr-x. 2 root root 25K Jul 17 13:30 llama_v2-500steps
 drwxr-xr-x. 2 root root 25K Jul 17 13:32 llama_v2-600steps
 drwxr-xr-x. 2 root root 25K Jul 17 13:33 llama_v2-700steps
 ```
-Exit back to your machine: 
+Exit back to your machine:
 ```
 exit
 ```
 </CollapsibleContent>
 
 <CollapsibleContent header={<h3><span>CloudWatch Container Insights</span></h3>}>
-Navigate to [Amazon CloudWatch Container Insights](https://console.aws.amazon.com/cloudwatch/home?#container-insights:?~(query~()~context~(orchestrationService~'eks))) to view GPU utilization and EFA network metrics: 
+Navigate to [Amazon CloudWatch Container Insights](https://console.aws.amazon.com/cloudwatch/home?#container-insights:?~(query~()~context~(orchestrationService~'eks))) to view GPU utilization and EFA network metrics:
 
 ![alt text](img/GPU-Insights.png)
 ![alt text](img/EFA-Insights.png)

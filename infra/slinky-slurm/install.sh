@@ -61,7 +61,7 @@ else
     sed -i \
       -e "s|\"service.beta.kubernetes.io/load-balancer-source-ranges\".*= \".*\"|\"service.beta.kubernetes.io/load-balancer-source-ranges\" = \"${IP_ADDRESS}/32\"|" \
       terraform/slurm-login-annotations.tf
-fi 
+fi
 
 # Copy the base into the folder
 mkdir -p ./terraform/_LOCAL

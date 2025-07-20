@@ -78,7 +78,7 @@ module "eks_blueprints_addons" {
   aws_load_balancer_controller = {
     set = [{
       name  = "enableServiceMutatorWebhook"
-      value = "${var.enable_service_mutator_webhook}"
+      value = var.enable_service_mutator_webhook
     }]
   }
 

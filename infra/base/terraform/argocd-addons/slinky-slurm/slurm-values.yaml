@@ -459,9 +459,9 @@ login:
   # --(list)
   # Define list of pod volumes.
   # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
-  extraVolumes: 
+  extraVolumes:
      - name: fsx-lustre
-       persistentVolumeClaim: 
+       persistentVolumeClaim:
         claimName: fsx-static-pvc
     # - name: nfs-home
     #   persistentVolumeClaim:
@@ -603,7 +603,7 @@ compute:
       # -- (list)
       # Configure pod tolerations.
       # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
-      tolerations: 
+      tolerations:
       - key: "nvidia.com/gpu"
         operator: "Exists"
         effect: "NoSchedule"
@@ -612,7 +612,7 @@ compute:
       # Set container resource requests and limits for Kubernetes Pod scheduling.
       # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
       resources:
-        limits: 
+        limits:
             nvidia.com/gpu: "1"
             vpc.amazonaws.com/efa: 1
         requests:
@@ -697,10 +697,10 @@ compute:
       # Ref: https://kubernetes.io/docs/concepts/storage/volumes/
       extraVolumes:
         - name: fsx-lustre
-          persistentVolumeClaim: 
+          persistentVolumeClaim:
             claimName: fsx-static-pvc
         - name: shmem
-          hostPath: 
+          hostPath:
             path: /dev/shm
         # - name: nfs-home
         #   nfs:

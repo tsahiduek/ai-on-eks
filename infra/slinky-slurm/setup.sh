@@ -55,8 +55,8 @@ if [[ "$SKIP_IMAGE_BUILD" == "true" ]]; then
 
   echo "Found existing image: ${IMAGE_REPOSITORY}:${IMAGE_TAG}"
 
-else 
-    # Authenticate to DLC repo (Account 763104351884 is publicly known) 
+else
+    # Authenticate to DLC repo (Account 763104351884 is publicly known)
     echo "Authenticating to the DLC ECR repo ..."
     aws ecr get-login-password --region us-east-1 \
     | docker login --username AWS \
@@ -72,17 +72,17 @@ else
         echo "Building image $REPO_NAME:$IMAGE_TAG on Linux..."
         docker build -t ${REPO_NAME}:${IMAGE_TAG} -f dlc-slurmd.Dockerfile .
     fi
-    
-    # Create ECR repo 
+
+    # Create ECR repo
     echo "Creating ECR repo $REPO_NAME (if it doesn't exist)"
     aws ecr create-repository --no-cli-pager --repository-name $REPO_NAME --region $AWS_REGION || echo "Repository already exists, continuing..."
 
-    # Authenticate to the repo 
+    # Authenticate to the repo
     echo "Authenticating to ECR in region $AWS_REGION..."
     aws ecr get-login-password --region $AWS_REGION \
     | docker login --username AWS \
     --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-    
+
     # Tag the image
     echo "Taging the image with $IMAGE_REPOSITORY:$IMAGE_TAG..."
     docker tag ${REPO_NAME}:${IMAGE_TAG} ${IMAGE_REPOSITORY}:${IMAGE_TAG}
@@ -92,12 +92,12 @@ else
     docker push ${IMAGE_REPOSITORY}:${IMAGE_TAG}
 fi
 
-# Make SSH Keys 
+# Make SSH Keys
 if [[ ! -f ~/.ssh/id_ed25519_slurm ]]; then
     ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_slurm -C "slurm-login" -N ""
 fi
 
-# Get the public key 
+# Get the public key
 SSH_KEY="$(cat ~/.ssh/id_ed25519_slurm.pub)"
 
 # Set the values in blueprint.tfvars (cross-platform sed)
@@ -115,4 +115,4 @@ else
       -e "s|image_tag.*= \".*\"|image_tag = \"${IMAGE_TAG}\"|" \
       -e "s|ssh_key.*= \".*\"|ssh_key = \"${SSH_KEY}\"|" \
       terraform/blueprint.tfvars
-fi 
+fi

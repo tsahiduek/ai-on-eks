@@ -81,7 +81,7 @@ resource "kubectl_manifest" "nvidia_dcgm_exporter" {
 resource "kubectl_manifest" "cert_manager_yaml" {
   count     = var.enable_cert_manager || var.enable_slurm_operator || var.enable_slurm_cluster ? 1 : 0
   yaml_body = file("${path.module}/argocd-addons/slinky-slurm/cert-manager.yaml")
-  
+
   depends_on = [
     module.eks_blueprints_addons
   ]
@@ -90,11 +90,11 @@ resource "kubectl_manifest" "cert_manager_yaml" {
 resource "null_resource" "wait_for_cert_manager" {
   count = var.enable_slurm_operator || var.enable_slurm_cluster ? 1 : 0
   provisioner "local-exec" {
-     environment = {
+    environment = {
       KUBECONFIG = pathexpand("~/.kube/config")
     }
     command = <<-EOT
-      set -e 
+      set -e
       aws eks --region ${var.region} update-kubeconfig --name ${var.name}
       bash ${path.module}/argocd-addons/slinky-slurm/wait-for-cert-manager.sh
     EOT
@@ -123,12 +123,12 @@ resource "kubectl_manifest" "priority_class" {
 }
 
 resource "kubectl_manifest" "slurm_cluster_yaml" {
-  count     = var.enable_slurm_cluster ? 1 : 0
+  count = var.enable_slurm_cluster ? 1 : 0
   yaml_body = templatefile("${path.module}/argocd-addons/slinky-slurm/slurm-cluster.yaml", {
     slurm_values = indent(8, templatefile("${path.module}/argocd-addons/slinky-slurm/slurm-values.yaml", {
       image_repository = var.image_repository
-      image_tag = var.image_tag
-      ssh_key = var.ssh_key
+      image_tag        = var.image_tag
+      ssh_key          = var.ssh_key
     }))
   })
 

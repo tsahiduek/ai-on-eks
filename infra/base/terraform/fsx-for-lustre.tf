@@ -136,7 +136,7 @@ resource "kubernetes_namespace" "fsx_namespace" {
 }
 
 resource "kubectl_manifest" "static_pvc" {
-  count     = var.deploy_fsx_volume ? 1 : 0
+  count = var.deploy_fsx_volume ? 1 : 0
   yaml_body = templatefile("${path.module}/fsx-for-lustre/fsxlustre-static-pvc.yaml", {
     namespace = var.fsx_pvc_namespace
   })

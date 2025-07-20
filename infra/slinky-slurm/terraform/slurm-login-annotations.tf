@@ -34,12 +34,12 @@ resource "kubernetes_annotations" "slurm_login_service" {
     namespace = "slurm"
   }
   annotations = {
-    "service.beta.kubernetes.io/aws-load-balancer-type"              = "nlb"
-    "service.beta.kubernetes.io/aws-load-balancer-scheme"            = "internet-facing"
-    "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"   = "ip"
-    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"  = "22"
-    "service.beta.kubernetes.io/aws-load-balancer-target-group-attributes"  = "preserve_client_ip.enabled=true"
-    "service.beta.kubernetes.io/load-balancer-source-ranges" = "" 
+    "service.beta.kubernetes.io/aws-load-balancer-type"                    = "nlb"
+    "service.beta.kubernetes.io/aws-load-balancer-scheme"                  = "internet-facing"
+    "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"         = "ip"
+    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"        = "22"
+    "service.beta.kubernetes.io/aws-load-balancer-target-group-attributes" = "preserve_client_ip.enabled=true"
+    "service.beta.kubernetes.io/load-balancer-source-ranges"               = ""
   }
 
   depends_on = [

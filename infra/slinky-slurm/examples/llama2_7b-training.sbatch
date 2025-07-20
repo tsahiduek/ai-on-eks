@@ -44,7 +44,7 @@ export NCCL_ASYNC_ERROR_HANDLING=1 # Enable asynchronous error handling for bett
 
 # Buffer settings
 export NCCL_BUFFSIZE=2097152 # Set NCCL communication buffer size to 2MB for larger transfers
-         
+
 # TCP connection settings
 export TORCH_DISTRIBUTED_DETAILED_LOGGING=1 # Enable verbose logging for PyTorch distributed operations
 export GLOO_SOCKET_IFNAME=eth0              # Use eth0 network interface for Gloo collective operations
@@ -61,7 +61,7 @@ export TORCH_DISTRIBUTED_DEBUG=DETAIL # Enable detailed debugging for distribute
 export TORCH_CPP_LOG_LEVEL=INFO       # Set C++ frontend logging level to INFO
 export CUDA_LAUNCH_BLOCKING=0         # Allow asynchronous CUDA kernel launches (0=async, 1=sync)
 
-# HuggingFace settings 
+# HuggingFace settings
 export HF_HUB_ETAG_TIMEOUT=60     # Metadata timeout (in seconds) for large clusters
 export HF_TOKEN=<your-token-here> # Token used to avoid throttling for data streaming
 
