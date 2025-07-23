@@ -34,7 +34,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.7.11 /uv /uvx /bin/
 # Runtime stage
 FROM python:3.12-slim-bookworm
 ...
-COPY --from=models some-model /app/models/some-model/weights.bin
+COPY --from=models some-model /app/models/some-model/configs
 COPY --from=builder --chown=app:app /app/.venv ./.venv
 COPY --from=builder --chown=app:app /app/main.py ./main.py
 ...
@@ -74,7 +74,7 @@ In context of the recommendation to employ multi-stage builds, `RUN` isn’t oft
 The `COPY` command, in the runtime stage, can be optimized using this process, with one challenge – it doesn’t support multiple destinations or multiple source stages, so combining these commands into one isn’t possible:
 
 ```
-COPY --from=models some-model /app/models/some-model/weights.bin
+COPY --from=models some-model /app/models/some-model/configs
 COPY --from=builder1 --chown=app:app /app/.venv ./.venv
 COPY --from=builder1 --chown=app:app /app/main.py ./main.py
 COPY --from=builder2 --chown=app:app /app/config.json ./config.json
