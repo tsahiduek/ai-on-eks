@@ -213,7 +213,7 @@ module "data_addons" {
   #---------------------------------------
   enable_kuberay_operator = var.enable_kuberay_operator
   kuberay_operator_helm_config = {
-    version = "1.4.0"
+    version = "1.1.1"
     # Enabling Volcano as Batch scheduler for KubeRay Operator
     values = [
       <<-EOT
@@ -243,6 +243,37 @@ module "data_addons" {
         # S3 bucket config for artifacts
         s3_bucket_name = try(module.mlflow_s3_bucket[0].s3_bucket_id, "")
       })
+    ]
+  }
+  #---------------------------------------------------------------
+  # NVIDIA Device Plugin Add-on
+  #---------------------------------------------------------------
+  enable_nvidia_device_plugin = true
+  nvidia_device_plugin_helm_config = {
+    version = "v0.17.1"
+    name    = "nvidia-device-plugin"
+    values = [
+      <<-EOT
+        nodeSelector:
+          accelerator: nvidia
+        gfd:
+          enabled: true
+        nfd:
+          gc:
+            nodeSelector:
+              accelerator: nvidia
+          topologyUpdater:
+            nodeSelector:
+              accelerator: nvidia
+          worker:
+            nodeSelector:
+              accelerator: nvidia
+            tolerations:
+              - key: nvidia.com/gpu
+                operator: Exists
+                effect: NoSchedule
+              - operator: "Exists"
+      EOT
     ]
   }
 
@@ -336,7 +367,7 @@ module "data_addons" {
             values: ["g6"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge" ]
+            values: ["2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -349,7 +380,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -400,7 +431,7 @@ module "data_addons" {
             values: ["g5"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge" ]
+            values: ["2xlarge", "4xlarge", "8xlarge", "12xlarge", "16xlarge", "24xlarge", "48xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -413,7 +444,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -457,7 +488,7 @@ module "data_addons" {
             values: ["m5"]
           - key: "karpenter.k8s.aws/instance-size"
             operator: In
-            values: [ "xlarge", "2xlarge", "4xlarge", "8xlarge"]
+            values: ["xlarge", "2xlarge", "4xlarge", "8xlarge"]
           - key: "kubernetes.io/arch"
             operator: In
             values: ["amd64"]
@@ -470,7 +501,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -529,7 +560,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
@@ -586,7 +617,7 @@ module "data_addons" {
           consolidationPolicy: WhenEmpty
           consolidateAfter: 300s
           expireAfter: 720h
-        weight: 100
+        weight: 30
       EOT
       ]
     }
