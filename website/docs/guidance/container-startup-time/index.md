@@ -1,5 +1,4 @@
 ---
-sidebar_position: 10
 sidebar_label: Solving cold start challenges for AI/ML inference applications on Amazon EKS
 ---
 
@@ -7,9 +6,9 @@ sidebar_label: Solving cold start challenges for AI/ML inference applications on
 
 ## The cold start challenge
 
-Containerizing AI/ML inference applications allows organizations to leverage Kubernetes' automated scaling to handle fluctuating demand, unified resource orchestration to manage expensive GPU hardware, and declarative configuration to simplify their deployment pipelines and operations.
+Containerizing AI/ML inference applications allows organizations to leverage Kubernetes's automated scaling to handle fluctuating demand, unified resource orchestration to manage expensive GPU hardware, and declarative configuration to simplify their deployment pipelines and operations.
 
-Despite these benefits, one inherent challenge still remains – application cold start.
+While Kubernetes offers a lot of benefits to make running applications easier, application cold start is still a challenge
 
 Although acceptable startup times differ between AI/ML inference applications, delays of tens of seconds to several minutes create cascading effects throughout the system, impacting user experience, application performance, operational efficiency, infrastructure costs, and time-to-market.
 
@@ -28,7 +27,7 @@ To effectively evaluate and implement the solutions in this guide, it is importa
 * Initialization processes of the application and its dependencies
 
 
-The rest of the guide explores, in depth, appropriate solutions for these factors for applications deployed on Amazon Elastic Kubernetes Service (Amazon EKS).
+The rest of the guide explores recommended patterns and solutions for these factors for applications deployed on Amazon Elastic Kubernetes Service (Amazon EKS).
 
 Each solution provides an implementation guide covering the following aspects:
 

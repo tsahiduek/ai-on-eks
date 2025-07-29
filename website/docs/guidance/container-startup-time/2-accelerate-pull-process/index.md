@@ -1,5 +1,4 @@
 ---
-sidebar_position: 100
 sidebar_label: Accelerating pull process
 ---
 

@@ -1,5 +1,4 @@
 ---
-sidebar_position: 14
 sidebar_label: Decoupling model artifacts from container image
 ---
 
@@ -121,7 +120,7 @@ The trade-offs include:
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
 
 For AI/ML inference application that read the artifacts into memory, skipping the intermediate step of storing them on the local disk, the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution may replace or be used in addition to improve the download performace further.
 
@@ -346,7 +345,7 @@ The trade-offs include:
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
 
 For AI/ML inference application that read the artifacts into memory this also allows to skip the intermediate step of storing them on the local disk, similar to the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution, and can be used instead (or in addition) to improve the download performance further.
 
@@ -407,6 +406,6 @@ The trade-offs include:
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
 
 >Note that this can introduce regression in accuracy or compatibility issues with serving frameworks.
