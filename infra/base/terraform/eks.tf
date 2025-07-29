@@ -185,6 +185,7 @@ module "eks" {
       labels = {
         NodeGroupType            = "g6-mng"
         "nvidia.com/gpu.present" = "true"
+        "accelerator"            = "nvidia"
       }
 
       min_size     = 0
@@ -237,6 +238,7 @@ module "eks" {
       # Check mig profiel config in infra/base/terraform/argocd-addons/nvidia-gpu-operator.yaml
       labels = {
         "nvidia.com/gpu.present"        = "true"
+        "accelerator"                   = "nvidia"
         "nvidia.com/gpu.product"        = "A100-SXM4-80GB"
         "nvidia.com/mig.config"         = "p4de-half-balanced" # References GPU Operator embedded MIG profile
         "node-type"                     = "p4de"
