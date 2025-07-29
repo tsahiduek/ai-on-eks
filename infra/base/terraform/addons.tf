@@ -253,7 +253,8 @@ module "data_addons" {
   # Otherwise, you'll encounter the "No devices found..." error. Restart the pod after attaching an EFA device, or use a node selector to prevent incompatible scheduling.
   enable_aws_efa_k8s_device_plugin = var.enable_aws_efa_k8s_device_plugin
   aws_efa_k8s_device_plugin_helm_config = {
-    values = [file("${path.module}/helm-values/aws-efa-k8s-device-plugin-values.yaml")]
+    version = "v0.5.13"
+    values  = [file("${path.module}/helm-values/aws-efa-k8s-device-plugin-values.yaml")]
   }
 
   #---------------------------------------------------------------
