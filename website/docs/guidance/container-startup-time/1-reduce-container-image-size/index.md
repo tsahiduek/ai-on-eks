@@ -12,7 +12,7 @@ As described in [AWS Container Build lens](https://docs.aws.amazon.com/wellarchi
 
 The solutions in this section focus on both traditional optimization techniques and architectural patterns that extract these large components from the container image to a different delivery system, like Amazon S3 or Amazon FSx. 
 
-Note that the relocated components must still be made available to the application, requiring any new delivery system to be faster than the image pull process. The subsequent [Accelerating pull process](../accelerate-pull-process/index.md) section addresses how to optimize the retrieval of container images. 
+Note that the relocated components must still be made available to the application, requiring any new delivery system to be faster than the image pull process. The subsequent [Accelerating pull process](../2-accelerate-pull-process/index.md) section addresses how to optimize the retrieval of container images. 
 
 
  
