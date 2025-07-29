@@ -68,7 +68,7 @@ You can copy the snapshot ID `snap-0c6d965cf431785ed` and configure it as a snap
 
 # Using Snapshot with Amazon EKS and Karpenter
 
-You can specify `snapshotID` in a Karpenter node class. Add the content on EC2NodeClass:
+You can specify `snapshotID` in a Karpenter node class (another option is to use the Infrastructure Blueprints in this repo, and pass the [snapshotID](https://github.com/awslabs/ai-on-eks/blob/main/infra/base/terraform/variables.tf#L64-L68) as part of the IaC configuration). Add the content on EC2NodeClass:
 
 ```
 apiVersion: karpenter.k8s.aws/v1beta1
