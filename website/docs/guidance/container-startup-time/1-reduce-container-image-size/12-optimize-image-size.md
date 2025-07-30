@@ -40,6 +40,10 @@ COPY --from=builder --chown=app:app /app/main.py ./main.py
 CMD ["sh", "-c", "exec fastapi run --host 0.0.0.0 --port 80 /app/main.py"]
 ```
 
+:::info
+Unlike typical application dependencies baked into container images, copying large model files (ranging from a few GBs to tens of GBs) is generally discouraged. This is due to increased container image size which affect its pull time, separate release lifecycle for the app and model, and potential storage duplication when sharing models across multiple apps.
+:::
+
 Copying only the required artifacts allows fine-grained control over which components of the build result are to be included in the final runtime image, reducing its size (along with other benefits, like security or workflow simplicity).
 
 In the example above we also employed two other [variations](https://docs.docker.com/reference/dockerfile/#copy---from) of `COPY --from`  (supported via BuildKit by the majority of popular image building platforms) :
@@ -49,7 +53,7 @@ In the example above we also employed two other [variations](https://docs.docker
 
 Note that while using `.dockerignore` is a good practice, in general, and should be used alongside the above process, it doesn’t impact the `COPY --from=...` commands.
 
-Note that this technique can be further (if sometimes marginally) improved by using the following one, taking caveats into consideration.
+Additionally this technique can be further (if sometimes marginally) improved by using the following one, taking caveats into consideration.
 
 ## Employing layer optimization techniques
 
@@ -106,5 +110,5 @@ Take into consideration that even when the above steps have a positive effect on
 
 The improvement should be weighted against the trade-offs that include:
 
-* reduction in cache efficiency, due to its lower granularity with a smaller amount of larger layers
+* reduction in cache efficiency, due to its lower granularity with a smaller amount of larger layers if layers are not ordered correctly 
 * build time, due to more shuffling for the sake of optimization of the runtime layer

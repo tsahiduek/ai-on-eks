@@ -15,7 +15,7 @@ This solution provides a straightforward approach to extracting any model files 
 The diagram in Figure 1 shows the architecture for the solution, which includes the personas, AWS services, Kubernetes components, and artifacts that are being created, stored and retrieved as part of the data flow.
 
 ![Figure 1: Init containers architecture to retrieve model artifacts from Amazon S3](img/init-container.png)
-*Figure 1: Init containers architecture to retrieve model artifacts from Amazon S3*
+_Figure 1: Init containers architecture to retrieve model artifacts from Amazon S3_
 
 **Implementation guide**
 
@@ -23,22 +23,20 @@ Following the architecture diagram above, these are the main high-level steps fo
 
 The DevOps/MLOps/Platform team:
 
-1. alters the Kubernetes deployment manifest (e.g., YAML files, Helm charts) to include init containers, 
+1. alters the Kubernetes deployment manifest (e.g., YAML files, Helm charts) to include init containers,
 2. implements, using the init containers that are executed first, the steps to download model artifacts to an EC2 volume
 3. alters the Kubernetes deployment manifests to:
-    1. define a volume shared between init containers and the application container 
-    2. mount the volume under the expected paths in the application container
+   1. define a volume shared between init containers and the application container
+   2. mount the volume under the expected paths in the application container
 4. adjusts pod IAM permissions to allow init containers to access the appropriate prefix in the bucket
 5. creates an Amazon S3 bucket to store model artifacts
 6. alters the container image definition to exclude the model artifacts during the build stage
-
 
 ML or application teams:
 
 1. upload model artifacts to an Amazon S3 bucket (as part of their SDLC)
 2. continue to push their container image changes to Amazon ECR, as before
 3. continue to use the Kubernetes deployment manifests to define the application Kubernetes deployment, as before
-
 
 The following code shows an already-adjusted Kubernetes deployment manifest:
 
@@ -99,28 +97,26 @@ This solution implements the high-level approach of improving AI/ML inference ap
 
 In addition to the main benefit, the solution introduces the following potential additional benefits:
 
-* Ability to update model versions separately from the application, without rebuilding the container image
-* Ability to A/B test, hot-swap or rollback models, without rebuilding or increasing the container image size
-* Ability to share models between different applications without packaging them into all container images
-* Reduction in storage cost and ability to utilize Amazon S3 storage classes, include Intelligent-Tiering
-* Ability to have a fine-grained control over access to models with Amazon EKS Pod Identity [session tags](https://docs.aws.amazon.com/eks/latest/userguide/pod-id-abac.html)
-* Faster container builds, aiding experimentation and testing
-* Minimal changes in the ML or application teams workflow
-* Simple cross-region replication
-
+- Ability to update model versions separately from the application, without rebuilding the container image
+- Ability to A/B test, hot-swap or rollback models, without rebuilding or increasing the container image size
+- Ability to share models between different applications without packaging them into all container images
+- Reduction in storage cost and ability to utilize Amazon S3 storage classes, include Intelligent-Tiering
+- Ability to have a fine-grained control over access to models with Amazon EKS Pod Identity [session tags](https://docs.aws.amazon.com/eks/latest/userguide/pod-id-abac.html)
+- Faster container builds, aiding experimentation and testing
+- Minimal changes in the ML or application teams workflow
+- Simple cross-region replication
 
 **Trade-offs**
 
 The trade-offs include:
 
-* Additional operational complexity of making the required CI/CD changes and handling the download process, including retries, error handling, backoff etc.
-* Additional storage and cleanup management, which essentially replicates the ECR functionality
-* In cases where additional replicas of the application often land on the same EC2 instances, having the image stored in on-host container runtime cache may be more beneficial to their containers startup time
-
+- Additional operational complexity of making the required CI/CD changes and handling the download process, including retries, error handling, backoff etc.
+- Additional storage and cleanup management, which essentially replicates the ECR functionality
+- In cases where additional replicas of the application often land on the same EC2 instances, having the image stored in on-host container runtime cache may be more beneficial to their containers startup time
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time.
 
 For AI/ML inference application that read the artifacts into memory, skipping the intermediate step of storing them on the local disk, the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution may replace or be used in addition to improve the download performace further.
 
@@ -141,7 +137,7 @@ This section is WIP, and will get more FSx service specific guides in the future
 The diagram in Figure 2 shows the architecture for the solution, which includes the personas, AWS services, Kubernetes components, and artifacts that are being created, stored and retrieved as part of the data flow.
 
 ![Figure 2: Using Trident CSI driver to store and access model artifacts on FSx for NetApp ONTAP](img/fsxn.png)
-*Figure 2: Using Trident CSI driver to store and access model artifacts on FSx for NetApp ONTAP*
+_Figure 2: Using Trident CSI driver to store and access model artifacts on FSx for NetApp ONTAP_
 
 **Implementation guide**
 
@@ -157,17 +153,15 @@ The DevOps/MLOps/Platform team:
 6. triggers the job for each model that is uploaded to S3 and “marked” as published (e.g., via tags)
 7. alters the container image definition to exclude the model artifacts during the build stage
 8. alters the application manifest to:
-    1. include a PVC that imports the shared PVC
-    2. define a volume for the application pod
-    3. mount the volume under the expected paths in the application container
-
+   1. include a PVC that imports the shared PVC
+   2. define a volume for the application pod
+   3. mount the volume under the expected paths in the application container
 
 ML or application teams:
 
 1. upload model artifacts to an Amazon S3 bucket (as part of their SDLC) or Git LFS
 2. continue to push their container image changes to Amazon ECR, as before
 3. continue to use the Kubernetes deployment manifests to define the application Kubernetes deployment, as before
-
 
 To further illustrate the above steps, what follows is a collection of the relevant code examples for the most important parts of the implementation.
 
@@ -208,7 +202,6 @@ spec:
     name: ${SVM_ADMIN_CREDS_SECRET_ARN}
     type: awsarn
 ```
-
 
 This is an example of a PVC that is handled by Trident and is allowed to be shared across namespaces:
 
@@ -323,7 +316,6 @@ spec:
             claimName: some-model
 ```
 
-
 **Main benefits**
 
 This solution implements the high-level approach of improving AI/ML inference application containers startup performance by reducing the container image size. It improves the time it takes for the model artifacts to become available for the application (since it no longer needs to download them).
@@ -332,36 +324,33 @@ This solution implements the high-level approach of improving AI/ML inference ap
 
 In addition to the main benefit, the solution introduces the following potential additional benefits:
 
-* Ability to update model versions separately from the application, without rebuilding the container image
-* Ability to A/B test, hot-swap or rollback models, without rebuilding or increasing the container image size
-* Ability to share models between different applications without packaging them into all container images
-* Kubernetes-driven provision and access control via Trident clone, share and snapshot-related features, which reduce the need to copy models, create new operation
-* Ability to have a POSIX-based access control to models
-* Faster container builds, aiding experimentation and testing
-* Minimal changes in the ML or application teams workflow
-
+- Ability to update model versions separately from the application, without rebuilding the container image
+- Ability to A/B test, hot-swap or rollback models, without rebuilding or increasing the container image size
+- Ability to share models between different applications without packaging them into all container images
+- Kubernetes-driven provision and access control via Trident clone, share and snapshot-related features, which reduce the need to copy models, create new operation
+- Ability to have a POSIX-based access control to models
+- Faster container builds, aiding experimentation and testing
+- Minimal changes in the ML or application teams workflow
 
 **Trade-offs**
 
 The trade-offs include:
 
-* Additional operational complexity of making the required CI/CD changes and maintaining the loader process
-* Additional software (Trident) to operate and maintain
-* The need to implement a custom S3/FSx for NetApp ONTAP TTL/retention-related mechanism to reduce storage cost
-* Read performance for the model artifacts needs to be measured against container image download time
-* More complex cross-region replication
-
+- Additional operational complexity of making the required CI/CD changes and maintaining the loader process
+- Additional software (Trident) to operate and maintain
+- The need to implement a custom S3/FSx for NetApp ONTAP TTL/retention-related mechanism to reduce storage cost
+- Read performance for the model artifacts needs to be measured against container image download time
+- More complex cross-region replication
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time.
 
 For AI/ML inference application that read the artifacts into memory this also allows to skip the intermediate step of storing them on the local disk, similar to the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution, and can be used instead (or in addition) to improve the download performance further.
 
 ## Baking model artifacts into a custom Amazon AMI
 
 **Architecture overview**
-
 
 ![Figure 3: Baking model artifacts into a custom Amazon AMI](img/custom-ami.png)
 
@@ -380,41 +369,37 @@ The DevOps/MLOps/Platform team:
 3. creates the corresponding Karpenter node pools that use the AMI
 4. alters the application manifest to include node selector for a node pool to be provided as a parameter
 
-
 ML or application teams:
 
 1. upload model artifacts to an Amazon S3 bucket (as part of their SDLC) or Git LFS
 2. continue to push their container image changes to Amazon ECR, as before
 3. provides the appropriate model-specific node pool labels as parameters to the Kubernetes manifest deployment
 
-
 **Main benefits**
 
 The solution provides the following main benefits:
 
-* no download latency as the models are available immediately upon container start
-* no network dependency
-
+- no download latency as the models are available immediately upon container start
+- no network dependency
 
 **Additional benefits**
 
 In addition to the main benefit, the solution introduces the following potential additional benefits:
 
-* no changes to Kubernetes artifacts
-* streamlined rollout for new model versions via Karpenter drift detection
-* no need to depend on additional services like S3 of FSx
-
+- no changes to Kubernetes artifacts
+- streamlined rollout for new model versions via Karpenter drift detection
+- no need to depend on additional services like S3 of FSx
 
 **Trade-offs**
 
 The trade-offs include:
 
-* Significant additional operational complexity of integrating Image Builder or Packer into the CI/CD process
-* Slower build times and longer feedback loop for experimentation, debugging and testing due a more complex setup that requires access to the AMI on a running instance
-* Storage cost if co-locating all models or extreme cluster segmentation with a AMI-per-model approach, since it requires to manage scheduling of the applications to their corresponding AMIs.
+- Significant additional operational complexity of integrating Image Builder or Packer into the CI/CD process
+- Slower build times and longer feedback loop for experimentation, debugging and testing due a more complex setup that requires access to the AMI on a running instance
+- Storage cost if co-locating all models or extreme cluster segmentation with a AMI-per-model approach, since it requires to manage scheduling of the applications to their corresponding AMIs.
 
 **Variants and hybrid solutions**
 
-This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time. 
+This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time.
 
->Note that this can introduce regression in accuracy or compatibility issues with serving frameworks.
+> Note that this can introduce regression in accuracy or compatibility issues with serving frameworks.
