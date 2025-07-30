@@ -53,41 +53,12 @@ const config = {
           src: 'img/header-icon.png',
         },
         items: [
-          {
-            type: 'doc',
-            docId: 'infra/ai-ml/index',
-            position: 'left',
-            label: 'Infrastructure',
-          },
-          {
-            type: 'doc',
-            docId: 'blueprints/index',
-            position: 'left',
-            label: 'Blueprints',
-          },
-          {
-            type: 'doc',
-            docId: 'bestpractices/intro',
-            position: 'left',
-            label: 'Best Practices',
-          },
-          {
-            type: 'doc',
-            docId: 'resources/intro',
-            position: 'left',
-            label: 'Resources',
-          },
-          {
-            type: 'doc',
-            docId: 'guidance/index',
-            position: 'left',
-            label: 'Guidance',
-          },
-          {
-            href: 'https://github.com/awslabs/ai-on-eks',
-            label: 'GitHub',
-            position: 'right',
-          },
+          { type: 'doc', docId: 'infra/ai-ml/index', position: 'left', label: 'Infrastructure' },
+          { type: 'doc', docId: 'blueprints/index', position: 'left', label: 'Blueprints' },
+          { type: 'doc', docId: 'bestpractices/intro', position: 'left', label: 'Best Practices' },
+          { type: 'doc', docId: 'resources/intro', position: 'left', label: 'Resources' },
+          { type: 'doc', docId: 'guidance/index', position: 'left', label: 'Guidance' },
+          { href: 'https://github.com/awslabs/ai-on-eks', label: 'GitHub', position: 'right' },
         ],
       },
       colorMode: {
@@ -99,19 +70,14 @@ const config = {
         sidebar: {
           hideable: true,
           autoCollapseCategories: true,
-        },
+        }
       },
       footer: {
         style: 'dark',
         links: [
           {
             title: 'Get Involved',
-            items: [
-              {
-                label: 'Github',
-                href: 'https://github.com/awslabs/ai-on-eks',
-              },
-            ],
+            items: [{ label: 'Github', href: 'https://github.com/awslabs/ai-on-eks' }],
           },
         ],
         copyright: `Built with ❤️ at AWS  <br/> © ${new Date().getFullYear()} Amazon.com, Inc. or its affiliates. All Rights Reserved`,
@@ -122,7 +88,7 @@ const config = {
       },
     }),
 
-  plugins: [require.resolve('docusaurus-lunr-search')],
+    plugins: [require.resolve('docusaurus-lunr-search')],
 };
 
 module.exports = config;

@@ -12,11 +12,15 @@ This solution simply relies on the organic improvements of the image pull proces
 
 There are no architectural changes, as this requires to bootstrap your worker nodes with the snapshotter via `userData` in the relevant Karpenter node classes or launch templates for the non-Karpenter instance provision schemes.
 
-The new SOCI snapshotter implementation introduces a non-lazy-loading pull mode that that pulls large layers in chunks, allowing them to be pulled faster, similar in idea to the [multipart layer fetch](https://github.com/containerd/containerd/pull/10177) introduced in [containerd 2.1.0](https://github.com/containerd/containerd/releases/tag/v2.1.0). By using a temporary file buffer instead of in-memory one, SOCI is able to parallelize the layers store and decompression operations, which results in a much faste image pulls (as permitted by hardware limitations).
+The new SOCI snapshotter implementation introduces a non-lazy-loading pull mode that that pulls large layers in chunks, allowing them to be pulled faster, similar in idea to the [multipart layer fetch](https://github.com/containerd/containerd/pull/10177) introduced in [containerd 2.1.0](https://github.com/containerd/containerd/releases/tag/v2.1.0). By using a temporary file buffer instead of in-memory one, SOCI is able to parallelize the layers store and decompression operations, which results in a much faster image pulls (as permitted by hardware limitations).
 
 **Implementation guide**
 
-This is a schematic implementation of the above changes:
+Below is a schematic implementation of the above changes: 
+
+:::info
+For a complete example on how to use SOCI snapshotter, please refer to [this guide](https://builder.aws.com/content/30EkTz8DbMjuqW0eHTQduc5uXi6/accelerate-container-startup-time-on-amazon-eks-with-soci-parallel-mode).
+:::
 
 ```
 apiVersion: karpenter.k8s.aws/v1
