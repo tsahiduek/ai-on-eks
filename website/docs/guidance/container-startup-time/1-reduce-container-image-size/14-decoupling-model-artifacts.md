@@ -124,15 +124,24 @@ This solution integrates well with the [Accelerating pull process](../2-accelera
 
 For AI/ML inference application that read the artifacts into memory, skipping the intermediate step of storing them on the local disk, the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution may replace or be used in addition to improve the download performace further.
 
+## Using Amazon File Storage services to host model artifacts
 
-## Using Trident CSI driver to provide access to model artifacts on Amazon FSxN
+This section covers different Amazon FSx services that can be used to decouple the model artifacts from a container image. Amazon FSx offers a range of services like FSx for OpenZFS, FSx for Lustre, or FSx for NetApp ONTAP. These services differs by the technology that back them, and have different performance and scale characteristics. To learn more about these services, refer to the [documentation](https://aws.amazon.com/fsx/when-to-choose-fsx/).
+
+Choosing the appropriate Amazon FSx service depends on the characteristics of your use case. Factors like the size of the model, the number of models, update frequency, and the number of clients that pull the models, may impact the chosen service.
+
+:::info
+This section is WIP, and will get more FSx service specific guides in the future.
+:::
+
+### Using Trident CSI driver to provide access to model artifacts on Amazon FSx for NetApp ONTAP
 
 **Architecture overview**
 
 The diagram in Figure 2 shows the architecture for the solution, which includes the personas, AWS services, Kubernetes components, and artifacts that are being created, stored and retrieved as part of the data flow.
 
-![Figure 2: Using Trident CSI driver to store and access model artifacts on FSxN](img/fsxn.png)
-*Figure 2: Using Trident CSI driver to store and access model artifacts on FSxN*
+![Figure 2: Using Trident CSI driver to store and access model artifacts on FSx for NetApp ONTAP](img/fsxn.png)
+*Figure 2: Using Trident CSI driver to store and access model artifacts on FSx for NetApp ONTAP*
 
 **Implementation guide**
 
@@ -140,7 +149,7 @@ Following the architecture diagram above, these are the main high-level steps fo
 
 The DevOps/MLOps/Platform team:
 
-1. creates the FSxN file system, the storage virtual machines (SVM) and the credentials secrets
+1. creates the FSx for NetApp ONTAP file system, the storage virtual machines (SVM) and the credentials secrets
 2. installs the Trident CSI driver, provides the required IAM permissions and defines a Trident CSI storage class
 3. defines a Trident NAS backend using the file system, SVM and the credentials
 4. defines and deploys a dynamic provision PVC, with the above storage class, shared to the application namespace
@@ -178,7 +187,7 @@ allowVolumeExpansion: True
 reclaimPolicy: Delete
 ```
 
-This is the Trident backend configuration for the backend integration with FSxN:
+This is the Trident backend configuration for the backend integration with FSx for NetApp ONTAP:
 
 ```
 apiVersion: trident.netapp.io/v1
@@ -220,7 +229,7 @@ spec:
       storage: 20Gi
 ```
 
-We can the use a Job that mounts the PVC and populates the FSxN volume behind its dynamic PV with data from S3:
+We can the use a Job that mounts the PVC and populates the FSx for NetApp ONTAP volume behind its dynamic PV with data from S3:
 
 ```
 apiVersion: batch/v1
@@ -338,7 +347,7 @@ The trade-offs include:
 
 * Additional operational complexity of making the required CI/CD changes and maintaining the loader process
 * Additional software (Trident) to operate and maintain
-* The need to implement a custom S3/FSxN TTL/retention-related mechanism to reduce storage cost
+* The need to implement a custom S3/FSx for NetApp ONTAP TTL/retention-related mechanism to reduce storage cost
 * Read performance for the model artifacts needs to be measured against container image download time
 * More complex cross-region replication
 
