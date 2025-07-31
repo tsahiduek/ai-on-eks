@@ -79,7 +79,7 @@ spec:
 
 **Main benefits**
 
-The solution provides a direct improvement to the image pull process by plugging a more performant snapshoter into containerd on a worker node.
+The solution provides a direct improvement to the image pull process by plugging a more performant snapshotter into containerd on a worker node.
 
 **Additional benefits**
 

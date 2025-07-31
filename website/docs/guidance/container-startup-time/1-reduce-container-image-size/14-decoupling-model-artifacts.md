@@ -118,7 +118,7 @@ The trade-offs include:
 
 This solution integrates well with the [Accelerating pull process](../2-accelerate-pull-process/index.md) group of solutions, improving both the container image size and its pull time.
 
-For AI/ML inference application that read the artifacts into memory, skipping the intermediate step of storing them on the local disk, the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution may replace or be used in addition to improve the download performace further.
+For AI/ML inference application that read the artifacts into memory, skipping the intermediate step of storing them on the local disk, the “Using Mountpoint CSI Driver to read model artifacts into memory directly from Amazon S3” solution may replace or be used in addition to improve the download performance further.
 
 ## Using Amazon File Storage services to host model artifacts
 
