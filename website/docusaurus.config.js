@@ -57,6 +57,7 @@ const config = {
           { type: 'doc', docId: 'blueprints/index', position: 'left', label: 'Blueprints' },
           { type: 'doc', docId: 'bestpractices/intro', position: 'left', label: 'Best Practices' },
           { type: 'doc', docId: 'resources/intro', position: 'left', label: 'Resources' },
+          { type: 'doc', docId: 'guidance/index', position: 'left', label: 'Guidance' },
           { href: 'https://github.com/awslabs/ai-on-eks', label: 'GitHub', position: 'right' },
         ],
       },
