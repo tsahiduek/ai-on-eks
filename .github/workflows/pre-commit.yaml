@@ -14,6 +14,13 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2"
+      - name: install tf_lint
+        run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      - name: install terraform-docs
+        run: curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.20.0/terraform-docs-v0.20.0-$(uname)-amd64.tar.gz && \
+             tar -xzf terraform-docs.tar.gz && \
+             chmod +x terraform-docs && \
+             mv terraform-docs /usr/local/bin/terraform-docs
       - name: install trufflehog
         run: curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
       - uses: pre-commit/action@v3.0.1
