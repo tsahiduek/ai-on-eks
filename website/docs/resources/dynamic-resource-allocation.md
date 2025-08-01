@@ -11,63 +11,194 @@ import Admonition from '@theme/Admonition';
 
 # Dynamic Resource Allocation for GPUs on Amazon EKS
 
-:::info ⚡️ TL;DR – Dynamic GPU Scheduling with DRA on EKS
+<details>
+<summary><strong>📚 TL;DR – Dynamic GPU Scheduling with DRA on EKS</strong></summary>
 
-**Stop using legacy GPU scheduling.** Dynamic Resource Allocation (DRA) is Kubernetes’ official path forward for fine-grained, topology-aware GPU management. Here’s what matters:
+**DRA is the next-generation GPU scheduling approach in Kubernetes.** Dynamic Resource Allocation (DRA) provides advanced GPU management capabilities beyond traditional device plugins. Here's what matters:
 
-**🚀 Why DRA Replaces Device Plugins:**
-- ✅ **Kubernetes-native replacement** – Device plugins are opaque, coarse-grained, and deprecated for advanced GPU use cases
-- ✅ **Memory-aware allocation** – Request exact GPU memory, not whole devices → boosts utilization in multi-tenant clusters
-- ✅ **Per-pod sharing strategies** – Choose `mps`, `time-slicing`, `mig`, or `exclusive` per workload—not cluster-wide
-- ✅ **Topology-aware scheduling** – Understands NVLink, IMEX, and GPU domains for smarter multi-GPU job placement
-- ✅ **Future-proof** – Required for GB200, P6e, and next-gen NVIDIA GPUs with logical partitioning
+### DRA Advantages over Traditional GPU Scheduling
 
-**📋 Implementation Prerequisites:**
-- ✅ **Amazon EKS v1.33+** with [DRA feature gates](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/) (enabled by default in AL2023 and Bottlerocket GPU AMIs)
-- ✅ **Managed or Self-Managed Node Groups**
-  ❌ **Karpenter not supported yet** ([open issue](https://github.com/kubernetes-sigs/karpenter/issues/1231))
-- ✅ [**NVIDIA GPU Operator**](https://github.com/NVIDIA/gpu-operator) + [**NVIDIA DRA Driver**](https://github.com/NVIDIA/k8s-dra-driver-gpu)
-  (Device plugin alone is insufficient)
-- ✅ **No manual NVIDIA driver install needed** on official EKS AMIs
+- **Fine-grained resource control** – Request specific GPU memory amounts, not just whole devices
+- **Per-workload sharing strategies** – Choose `mps`, `time-slicing`, `mig`, or `exclusive` per pod, not cluster-wide
+- **Topology-aware scheduling** – Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), and GPU interconnects for multi-GPU workloads
+- **Advanced GPU features** – Required for [GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/) [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), and next-gen GPU capabilities
+- **Coexistence-friendly** – Can run alongside traditional device plugins during transition
 
-**⚡ Production Considerations:**
-- ✅ **Stable in practice** – Supported by NVIDIA, widely tested for production inference/training use cases
-- ⚠️ **Higher scheduling latency** – 200–400ms slower than device plugin model due to claim resolution
-- ✅ **Transition-friendly** – Can run DRA alongside device plugin during migration period
-- 📅 **GA planned in Kubernetes v1.34 (2025)**
+### Current Implementation Status
 
-:::
+- **Kubernetes v1.32+** – DRA is **beta** but **disabled by default** (requires feature gate enablement)
+- **EKS v1.33** – DRA feature gates enabled in EKS-optimized configurations
+- **For detailed DRA implementation** – See [Kubernetes DRA documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/)
+- **Node provisioning compatibility:**
+  - **Managed Node Groups** – DRA support
+  - **Self-Managed Node Groups** – DRA support (requires manual configuration, no AWS support)
+  - **Karpenter** – DRA support in development ([Issue #1231](https://github.com/kubernetes-sigs/karpenter/issues/1231))
+- **NVIDIA GPU Operator v25.3.0+** and **NVIDIA DRA Driver v25.3.0+** required
+- **Coexistence** – Traditional device plugin and DRA can run simultaneously
 
-## Background
+### Why Managed/Self-Managed Node Groups vs Karpenter for DRA?
 
-Kubernetes has become the default orchestration layer for AI/ML workloads, with Amazon EKS widely adopted for managing GPU-accelerated infrastructure. However, traditional GPU scheduling in Kubernetes treats devices as fixed, whole units—using integer-based requests like nvidia.com/gpu: 1. This model lacks the flexibility needed to support modern AI workflows, which range from lightweight inference jobs to distributed training across multi-node, multi-GPU topologies.
+- **Managed/Self-Managed Node Groups** – Full DRA support, optimized for Capacity Block Reservations
+- **Karpenter** – DRA support in development, dynamic scaling conflicts with reserved GPU capacity
+- **EKS-optimized AMIs** – Come with pre-installed NVIDIA drivers
 
-As AI models grow into the billions and trillions of parameters, efficient GPU scheduling must account for resource sharing, interconnect bandwidth (e.g., NVLink, IMEX), and hardware isolation. The introduction of Kubernetes Dynamic Resource Allocation (DRA) addresses these challenges by enabling fine-grained, declarative GPU requests and runtime-aware sharing through strategies like MPS, MIG, and time-slicing—turning GPUs into schedulable resources that match real workload requirements.
+### Can I Use Both Traditional GPU Allocation and DRA Together?
 
-## GPU Utilization Crisis
+- **Coexistence supported** – Both can run simultaneously on the same cluster
+- **Wave-by-wave migration** – Recommended gradual adoption approach
+- **DRA is the future** – NVIDIA and Kubernetes moving exclusively to DRA
+- **Migration strategy** – Use DRA for new workloads, traditional for existing production
 
-The limitations of Kubernetes’ legacy GPU model become especially visible in production environments running mixed workloads. By treating GPUs as opaque, indivisible resources, the scheduler enforces a binary allocation model—granting exclusive access to entire devices even when workloads require only a fraction of compute or memory. This approach significantly restricts concurrency and leads to inefficient hardware usage.
+<Admonition type="warning" title="GB200 Ultraserver Requirement">
 
-Common symptoms of this architectural bottleneck include:
+- **Traditional scheduling unsupported** – GB200 systems **require DRA** and won't work with NVIDIA device plugin + kube-scheduler
+- **DRA mandatory** – Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) and [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) capabilities only available through DRA
 
-- **Queue starvation**: Inference jobs requiring minimal resources are delayed behind long-running training tasks.
-- **Resource fragmentation**: Usable GPU memory is stranded across nodes in non-schedulable slices.
-- **Topology unawareness**: GPU interconnects like NVLink or IMEX are ignored during scheduling, degrading multi-GPU job performance.
+</Admonition>
 
-:::danger Critical Inefficiency
-Even in high-demand clusters, observed GPU utilization frequently remains below 40%. This inefficiency isn’t a tuning problem—it’s a fundamental flaw in how GPUs are abstracted and allocated in Kubernetes.
-:::
+### Production Readiness
 
-## What is DRA and Why It Matters
+- **Technology Preview** – GPU allocation and sharing features actively developed by NVIDIA
+- **Production Ready** – ComputeDomains for Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) fully supported
+- **Scheduling overhead** – Additional latency due to claim resolution process
+- **General Availability** – Expected in Kubernetes v1.34 (2025)
+- **Latest status updates** – Follow [NVIDIA DRA Driver GitHub](https://github.com/NVIDIA/k8s-dra-driver-gpu) for current development progress
 
-Dynamic Resource Allocation (DRA) introduces a critical shift in how Kubernetes handles GPU scheduling—moving from rigid integer-based requests to a declarative, claim-based model that supports dynamic provisioning and fine-grained resource sharing. Rather than abstracting GPUs as monolithic blocks, DRA allows workloads to articulate their actual requirements through ResourceClaimTemplates, which are resolved into ResourceClaims during pod admission.
+<Admonition type="tip" title="Additional Resources">
 
-This model enables the Kubernetes scheduler to make smarter placement decisions by coordinating with the resourceclaim-controller, device drivers, and vendor-specific plugins (like NVIDIA’s DRA driver). GPU allocations are no longer blind or static—DRA-aware components can shape allocations dynamically based on availability, isolation constraints, and runtime capabilities like MIG, MPS, or time-slicing.
+For comprehensive guidance on AI/ML workloads on EKS, see the [AWS EKS Best Practices for AI/ML Compute](https://docs.aws.amazon.com/eks/latest/best-practices/aiml-compute.html#aiml-dra).
 
-:::tip 🎯 DRA Transformation
-DRA replaces coarse GPU requests with structured ResourceClaims and DeviceClasses, giving the scheduler and device drivers the context needed to allocate the right resources to the right workloads—at the right time.
-:::
+</Admonition>
 
+</details>
+
+## The GPU Scheduling Challenge in Kubernetes
+
+### Current State: Traditional GPU Allocation
+
+Kubernetes has rapidly evolved into the de facto standard for orchestrating AI/ML workloads across enterprise environments, with Amazon EKS emerging as the leading platform for managing GPU-accelerated infrastructure at scale. Organizations are running everything from small inference services to massive distributed training jobs on EKS clusters, leveraging GPU instances like P4d, P5, and the latest P6 series to power their machine learning pipelines.
+
+However, despite Kubernetes' sophistication in managing containerized workloads, the traditional GPU scheduling model remains surprisingly primitive and creates significant operational challenges. The current approach treats GPUs as simple, atomic resources that can only be allocated in whole units, fundamentally mismatched with the diverse and evolving needs of modern AI workloads.
+
+**How Traditional GPU Scheduling Works:**
+- Pods request GPUs using simple integer values: `nvidia.com/gpu: 1`
+- Scheduler treats GPUs as opaque, indivisible resources
+- Each workload gets exclusive access to entire GPU devices
+- No awareness of actual resource requirements or GPU topology
+
+**The Problem with This Approach:**
+Modern AI workloads have diverse requirements that don't fit this binary model:
+- **Small inference jobs** need only 2-4GB GPU memory but get allocated entire 80GB A100s
+- **Large training jobs** require coordinated multi-GPU communication via [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) or [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html)
+- **Mixed workloads** could share GPUs efficiently but are forced into separate devices
+
+### The GPU Utilization Crisis
+
+<Admonition type="warning" title="Critical Inefficiency in Production">
+
+**Even in high-demand clusters, GPU utilization frequently remains below 40%.** This isn't a configuration issue: it's a fundamental limitation of how Kubernetes abstracts GPU resources.
+
+</Admonition>
+
+**Common symptoms of inefficient GPU allocation:**
+
+- **Queue starvation** - Small inference jobs wait behind long-running training tasks
+- **Resource fragmentation** - GPU memory is stranded in unusable chunks across nodes
+- **Topology blindness** - Multi-GPU jobs get suboptimal placement, degrading [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) performance
+- **Cost explosion** - Organizations overprovision GPUs to work around scheduling inefficiencies
+
+**Real-world impact:** A typical enterprise AI platform running mixed workloads wastes 60% of GPU capacity due to these scheduling limitations.
+
+## Enter Dynamic Resource Allocation (DRA)
+
+### What DRA Changes
+
+Dynamic Resource Allocation fundamentally transforms GPU scheduling in Kubernetes from a rigid, device-centric model to a flexible, workload-aware approach:
+
+**Traditional Approach:**
+```yaml
+resources:
+  limits:
+    nvidia.com/gpu: 1  # Get entire GPU, no customization
+```
+
+**DRA Approach:**
+```yaml
+resourceClaims:
+- name: gpu-claim
+  source:
+    resourceClaimTemplateName: gpu-template  # Detailed requirements
+```
+
+*See examples section below for ResourceClaimTemplate configurations.*
+
+<Admonition type="warning" title="Namespace Requirement">
+
+**Critical:** ResourceClaims must exist in the same namespace as the Pods that reference them. Cross-namespace resource claims are not supported.
+
+</Admonition>
+
+### Key DRA Innovations
+
+**1. Fine-grained Resource Control**
+- Request specific GPU memory amounts (e.g., 16Gi out of 80Gi available)
+- Specify compute requirements independent of memory needs
+- Define topology constraints for multi-GPU workloads
+- **Note:** ResourceClaims and Pods must be in the same namespace
+
+**2. Per-Workload Sharing Strategies**
+- **MPS** for concurrent small workloads with memory isolation
+- **Time-slicing** for workloads with different peak usage patterns
+- **MIG** for hardware-level isolation in multi-tenant environments
+- **Exclusive** for performance-critical training jobs
+
+**3. Topology-Aware Scheduling**
+- Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) connections between GPUs
+- Leverages [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) for GB200 superchip clusters
+- Optimizes placement for distributed training workloads
+
+**4. Future-Proof Architecture**
+- Required for next-generation systems like [GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/) ultraclusters
+- Enables advanced features like Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/)
+- Supports emerging GPU architectures and sharing technologies
+
+### Understanding IMEX, ComputeDomains, and GB200 Multi-Node Scheduling
+
+**[IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) (NVIDIA Internode Memory Exchange/Management Service)** is NVIDIA's orchestration service for GPU memory sharing across [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) multi-node deployments. In [GB200 ultracluster](https://aws.amazon.com/ec2/instance-types/p6/) configurations, IMEX coordinates memory export and import operations between nodes, enabling direct GPU-to-GPU memory access across multiple compute nodes for massive AI model training with billions of parameters.
+
+**ComputeDomains** represent logical groupings of interconnected GPUs that can communicate efficiently through high-bandwidth connections like [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) or [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html). DRA uses ComputeDomains to understand GPU topology and ensure workloads requiring multi-GPU coordination are scheduled on appropriately connected hardware.
+
+**GB200 Multi-Node Scheduling** leverages DRA's topology awareness to coordinate workloads across multiple superchip nodes. Traditional GPU scheduling cannot understand these complex interconnect relationships, making DRA essential for optimal placement of distributed training jobs on GB200 systems where proper GPU topology selection directly impacts training performance.
+
+For detailed configuration examples and implementation guidance, see the [AWS EKS AI/ML Best Practices documentation](https://docs.aws.amazon.com/eks/latest/best-practices/aiml-compute.html#aiml-dra).
+
+## Implementation Considerations for EKS
+
+Now that we understand DRA's capabilities and advanced features like IMEX and ComputeDomains, let's explore the practical considerations for implementing DRA on Amazon EKS. The following sections address key decisions around node provisioning, migration strategies, and EKS-specific configurations that will determine your DRA deployment success.
+
+### Managed Node Groups vs Karpenter for P-Series GPU Instances and DRA
+
+The choice between node provisioning methods for DRA isn't just about technical compatibility. It's fundamentally about how GPU capacity is purchased and utilized in enterprise AI workloads. **Managed and Self-Managed Node Groups are currently the recommended approach for DRA because they align with the economics and operational patterns of high-end GPU instances.**
+
+Here's why: The majority of large GPU instances ([P4d](https://aws.amazon.com/ec2/instance-types/p4/) (A100), [P5](https://aws.amazon.com/ec2/instance-types/p5/) (H100), [P6 with B200](https://aws.amazon.com/ec2/instance-types/p6/), and [P6e with GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/)) are primarily available through AWS Capacity Block Reservations rather than on-demand pricing. **When organizations purchase Capacity Blocks, they're committing to pay for every second of GPU time until the reservation expires, regardless of whether the GPUs are actively utilized.** This creates a fundamental mismatch with Karpenter's core value proposition of dynamic scaling based on workload demand. Spinning nodes down during low-demand periods doesn't save money. It actually wastes the reserved capacity you're already paying for.
+
+Additionally, **Karpenter doesn't yet support DRA scheduling** ([Issue #1231](https://github.com/kubernetes-sigs/karpenter/issues/1231) tracks active development), making it incompatible with production DRA workloads. While Karpenter excels at cost optimization through dynamic scaling for general compute workloads, **Capacity Block reservations require an "always-on" utilization strategy to maximize ROI**: exactly what Managed Node Groups provide with their static capacity model.
+
+**The future picture is more optimistic:** Karpenter's roadmap includes static node features that would make it suitable for Capacity Block scenarios. The community is actively working on [manual node provisioning without workloads](https://github.com/kubernetes-sigs/karpenter/issues/749) and static provisioning capabilities through RFCs like [static provisioning](https://github.com/kubernetes-sigs/karpenter/pull/2309) and [manual node provisioning](https://github.com/kubernetes-sigs/karpenter/pull/2397). Once DRA support is added alongside these static provisioning capabilities, Karpenter could become the preferred choice for DRA workloads with Capacity Block ML reserved instances. Until then, **Managed Node Groups with EKS-optimized AMIs (which come with pre-installed NVIDIA drivers) provide the most reliable foundation for DRA implementations.**
+
+### DRA and Traditional GPU Allocation Coexistence
+
+**Yes, but with careful configuration to avoid conflicts.** DRA and traditional GPU allocation can coexist on the same cluster, but this requires thoughtful setup to prevent resource double-allocation issues. NVIDIA's DRA driver is designed as an additional component alongside the GPU Operator, with selective enablement to avoid conflicts.
+
+**The recommended approach for gradual migration:** Configure the NVIDIA DRA driver to enable only specific subsystems initially. For example, you can set `resources.gpus.enabled=false` to use traditional device plugins for GPU allocation while enabling DRA's ComputeDomain subsystem for Multi-Node NVLink capabilities. This allows teams to gain operational experience with DRA's advanced features without risking established GPU allocation workflows.
+
+**Key considerations for coexistence:**
+- **Avoid same-device conflicts**: DRA and device plugins should not manage the same GPU devices simultaneously
+- **Selective component enablement**: Use NVIDIA DRA driver's modular design to enable features gradually
+- **Node selector management**: Configure node selectors carefully to prevent resource allocation conflicts
+- **Technology Preview status**: GPU allocation and sharing features are in Technology Preview (check [NVIDIA DRA Driver GitHub](https://github.com/NVIDIA/k8s-dra-driver-gpu) for updates)
+
+**For migration planning,** start with DRA's production-ready features like ComputeDomains for Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), while keeping traditional device plugins for core GPU allocation. Once DRA's GPU allocation reaches full support, gradually migrate workloads starting with development and inference services before moving mission-critical training jobs. **NVIDIA and the Kubernetes community have designed DRA as the eventual replacement for device plugins**, but the transition requires careful orchestration to maintain cluster stability.
 
 ### Visual Comparison: Traditional vs DRA
 
@@ -160,6 +291,7 @@ style D_Driver fill:#80cbc4,stroke:#00695c,color:#000
 style D_GPU fill:#a5d6a7,stroke:#2e7d32,color:#000
 ```
 
+
 ### Technical Capabilities Comparison
 
 | Capability                      | Traditional Device Plugin                       | Dynamic Resource Allocation (DRA)                          |
@@ -171,7 +303,7 @@ style D_GPU fill:#a5d6a7,stroke:#2e7d32,color:#000
 | **Device Selection**           | ❌ Random or round-robin                         | ✅ CEL-based filtering and node/device matching            |
 | **Runtime Reconfiguration**    | ❌ Requires pod deletion and redeployment        | ✅ Dynamic reallocation possible without restarts          |
 | **MPS/Time-slicing Support**   | ⚠️ Yes, but limited to global config             | ✅ Fully supported via ResourceSlices per workload         |
-| **MIG Support**                | ⚠️ Limited—static MIG partitions require manual setup | ✅ Full support for MIG profiles via dynamic claims and driver integration |
+| **MIG Support**                | ⚠️ Limited - static MIG partitions require manual setup | ✅ Full support for MIG profiles via dynamic claims and driver integration |
 | **Mixed Sharing Strategies**   | ❌ One strategy cluster-wide                     | ✅ Strategy defined per pod/template for workload isolation |
 
 
@@ -202,7 +334,7 @@ The driver registers one or more `DeviceClass` objects to logically group GPU re
 - Topology constraints for multi-GPU workloads
 
 #### 4. Intelligent Scheduling
-The DRA-aware scheduler evaluates pending `ResourceClaims` and queries available `ResourceSlices` across nodes::
+The DRA-aware scheduler evaluates pending `ResourceClaims` and queries available `ResourceSlices` across nodes:
 - Matches device properties and constraints using CEL expressions
 - Ensures sharing strategy compatibility with other running pods
 - Selects optimal nodes considering topology, availability, and policy
