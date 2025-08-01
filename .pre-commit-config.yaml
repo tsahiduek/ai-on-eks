@@ -31,6 +31,7 @@ repos:
           - --args=--only=terraform_required_providers
           - --args=--only=terraform_unused_required_providers
           - --args=--only=terraform_workspace_remote
+        exclude: (nvidia-dynamo)
       - id: terraform_validate
         args:
           # Parallel terraform init can cause problems when using a cache: https://github.com/hashicorp/terraform/issues/31964
