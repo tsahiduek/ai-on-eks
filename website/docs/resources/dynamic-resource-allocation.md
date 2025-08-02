@@ -1,5 +1,4 @@
 ---
-sidebar_position: 4
 sidebar_label: Dynamic Resource Allocation on EKS
 mermaid: true
 ---
@@ -21,7 +20,7 @@ import Admonition from '@theme/Admonition';
 - **Fine-grained resource control** – Request specific GPU memory amounts, not just whole devices
 - **Per-workload sharing strategies** – Choose `mps`, `time-slicing`, `mig`, or `exclusive` per pod, not cluster-wide
 - **Topology-aware scheduling** – Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), and GPU interconnects for multi-GPU workloads
-- **Advanced GPU features** – Required for [GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/) [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), and next-gen GPU capabilities
+- **Advanced GPU features** – Required for [Amazon EC2 P6e-GB200 UltraServers](https://aws.amazon.com/ec2/instance-types/p6/) [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), and next-gen GPU capabilities
 - **Coexistence-friendly** – Can run alongside traditional device plugins during transition
 
 ### Current Implementation Status
@@ -49,9 +48,9 @@ import Admonition from '@theme/Admonition';
 - **DRA is the future** – NVIDIA and Kubernetes moving exclusively to DRA
 - **Migration strategy** – Use DRA for new workloads, traditional for existing production
 
-<Admonition type="warning" title="GB200 Ultraserver Requirement">
+<Admonition type="warning" title="Amazon EC2 P6e-GB200 UltraServer Requirement">
 
-- **Traditional scheduling unsupported** – GB200 systems **require DRA** and won't work with NVIDIA device plugin + kube-scheduler
+- **Traditional scheduling unsupported** – Amazon EC2 P6e-GB200 UltraServers **require DRA** and won't work with NVIDIA device plugin + kube-scheduler
 - **DRA mandatory** – Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) and [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) capabilities only available through DRA
 
 </Admonition>
@@ -154,21 +153,21 @@ resourceClaims:
 
 **3. Topology-Aware Scheduling**
 - Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) connections between GPUs
-- Leverages [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) for GB200 superchip clusters
+- Leverages [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) for [Amazon EC2 P6e-GB200 UltraServer](https://aws.amazon.com/ec2/instance-types/p6/) clusters
 - Optimizes placement for distributed training workloads
 
 **4. Future-Proof Architecture**
-- Required for next-generation systems like [GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/) ultraclusters
+- Required for next-generation systems like [Amazon EC2 P6e-GB200 UltraServers](https://aws.amazon.com/ec2/instance-types/p6/)
 - Enables advanced features like Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/)
 - Supports emerging GPU architectures and sharing technologies
 
-### Understanding IMEX, ComputeDomains, and GB200 Multi-Node Scheduling
+### Understanding IMEX, ComputeDomains, and Amazon EC2 P6e-GB200 Multi-Node Scheduling
 
-**[IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) (NVIDIA Internode Memory Exchange/Management Service)** is NVIDIA's orchestration service for GPU memory sharing across [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) multi-node deployments. In [GB200 ultracluster](https://aws.amazon.com/ec2/instance-types/p6/) configurations, IMEX coordinates memory export and import operations between nodes, enabling direct GPU-to-GPU memory access across multiple compute nodes for massive AI model training with billions of parameters.
+**[IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) (NVIDIA Internode Memory Exchange/Management Service)** is NVIDIA's orchestration service for GPU memory sharing across [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) multi-node deployments. In [Amazon EC2 P6e-GB200 UltraServer](https://aws.amazon.com/ec2/instance-types/p6/) configurations, IMEX coordinates memory export and import operations between nodes, enabling direct GPU-to-GPU memory access across multiple compute nodes for massive AI model training with billions of parameters.
 
 **ComputeDomains** represent logical groupings of interconnected GPUs that can communicate efficiently through high-bandwidth connections like [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) or [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html). DRA uses ComputeDomains to understand GPU topology and ensure workloads requiring multi-GPU coordination are scheduled on appropriately connected hardware.
 
-**GB200 Multi-Node Scheduling** leverages DRA's topology awareness to coordinate workloads across multiple superchip nodes. Traditional GPU scheduling cannot understand these complex interconnect relationships, making DRA essential for optimal placement of distributed training jobs on GB200 systems where proper GPU topology selection directly impacts training performance.
+**Amazon EC2 P6e-GB200 Multi-Node Scheduling** leverages DRA's topology awareness to coordinate workloads across multiple superchip nodes. Traditional GPU scheduling cannot understand these complex interconnect relationships, making DRA essential for optimal placement of distributed training jobs on [Amazon EC2 P6e-GB200 UltraServer](https://aws.amazon.com/ec2/instance-types/p6/) systems where proper GPU topology selection directly impacts training performance.
 
 For detailed configuration examples and implementation guidance, see the [AWS EKS AI/ML Best Practices documentation](https://docs.aws.amazon.com/eks/latest/best-practices/aiml-compute.html#aiml-dra).
 
@@ -180,7 +179,7 @@ Now that we understand DRA's capabilities and advanced features like IMEX and Co
 
 The choice between node provisioning methods for DRA isn't just about technical compatibility. It's fundamentally about how GPU capacity is purchased and utilized in enterprise AI workloads. **Managed and Self-Managed Node Groups are currently the recommended approach for DRA because they align with the economics and operational patterns of high-end GPU instances.**
 
-Here's why: The majority of large GPU instances ([P4d](https://aws.amazon.com/ec2/instance-types/p4/) (A100), [P5](https://aws.amazon.com/ec2/instance-types/p5/) (H100), [P6 with B200](https://aws.amazon.com/ec2/instance-types/p6/), and [P6e with GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/)) are primarily available through AWS Capacity Block Reservations rather than on-demand pricing. **When organizations purchase Capacity Blocks, they're committing to pay for every second of GPU time until the reservation expires, regardless of whether the GPUs are actively utilized.** This creates a fundamental mismatch with Karpenter's core value proposition of dynamic scaling based on workload demand. Spinning nodes down during low-demand periods doesn't save money. It actually wastes the reserved capacity you're already paying for.
+Here's why: The majority of large GPU instances ([P4d](https://aws.amazon.com/ec2/instance-types/p4/) (A100), [P5](https://aws.amazon.com/ec2/instance-types/p5/) (H100), [P6 with B200](https://aws.amazon.com/ec2/instance-types/p6/), and [P6e with GB200](https://www.nvidia.com/en-us/data-center/gb200-nvl72/)) are primarily available through AWS Capacity Block Reservations rather than on-demand pricing. **When organizations purchase Capacity Blocks, they commit to paying for every second of GPU time until the reservation expires, regardless of whether the GPUs are actively utilized.** This creates a fundamental mismatch with Karpenter's core value proposition of dynamic scaling based on workload demand. Spinning nodes down during low-demand periods doesn't save money. It actually wastes the reserved capacity you're already paying for.
 
 Additionally, **Karpenter doesn't yet support DRA scheduling** ([Issue #1231](https://github.com/kubernetes-sigs/karpenter/issues/1231) tracks active development), making it incompatible with production DRA workloads. While Karpenter excels at cost optimization through dynamic scaling for general compute workloads, **Capacity Block reservations require an "always-on" utilization strategy to maximize ROI**: exactly what Managed Node Groups provide with their static capacity model.
 
@@ -355,7 +354,7 @@ On the selected node, the DRA driver:
 
 Ensure that you have installed the following tools on your machine:
 
-- **aws cli** - AWS Command Line Interface
+- **[AWS CLI](https://aws.amazon.com/cli/)** - AWS Command Line Interface
 - **kubectl** - Kubernetes command-line tool
 - **terraform** - Infrastructure as Code tool
 
