@@ -16,7 +16,7 @@ The new SOCI snapshotter implementation introduces a non-lazy-loading pull mode 
 
 **Implementation guide**
 
-Below is a schematic implementation of the above changes: 
+Below is a schematic implementation of the above changes:
 
 :::info
 For a complete example on how to use SOCI snapshotter, please refer to [this guide](https://builder.aws.com/content/30EkTz8DbMjuqW0eHTQduc5uXi6/accelerate-container-startup-time-on-amazon-eks-with-soci-parallel-mode).
@@ -44,9 +44,9 @@ spec:
 
     --//
     Content-Type: text/x-shellscript; charset="us-ascii"
-    
+
     # 1. Detect the architecture
-    # 2. Download the v0.11.0+ SOCI snapshotter version 
+    # 2. Download the v0.11.0+ SOCI snapshotter version
     #    at https://github.com/awslabs/soci-snapshotter/releases/download/...
     # 3. Configure the snapshotter by creating a config.toml file
     # 4. Configure the snapshotter service by creating a systemd config file
@@ -88,4 +88,3 @@ This solution requires no changes to the development process, no additional infr
 **Trade-offs**
 
 Before the snapshotter becomes the default, this requires to implement and maintain a `userData` bootstrapping of the worker node described above. Once it becomes the default → none.
-

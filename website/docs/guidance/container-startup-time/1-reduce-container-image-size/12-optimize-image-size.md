@@ -106,9 +106,9 @@ COPY --from=assembly --chown=app:app /app /app
 CMD ["python", "main.py"]
 ```
 
-Take into consideration that even when the above steps have a positive effect on the overall container startup time, it is often negligible, relative to other solutions in this guide and should be assessed before investing time into the technique. 
+Take into consideration that even when the above steps have a positive effect on the overall container startup time, it is often negligible, relative to other solutions in this guide and should be assessed before investing time into the technique.
 
 The improvement should be weighted against the trade-offs that include:
 
-* reduction in cache efficiency, due to its lower granularity with a smaller amount of larger layers if layers are not ordered correctly 
+* reduction in cache efficiency, due to its lower granularity with a smaller amount of larger layers if layers are not ordered correctly
 * build time, due to more shuffling for the sake of optimization of the runtime layer
