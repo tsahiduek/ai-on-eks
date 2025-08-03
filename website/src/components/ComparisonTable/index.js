@@ -8,7 +8,7 @@ export default function ComparisonTable({ capabilities }) {
         <div className={styles.traditionalCol}>🔴 Traditional Device Plugin</div>
         <div className={styles.draCol}>🟢 Dynamic Resource Allocation (DRA)</div>
       </div>
-      
+
       {capabilities.map((capability, index) => (
         <div key={index} className={styles.comparisonRow}>
           <div className={styles.capabilityName}>

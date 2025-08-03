@@ -4,10 +4,10 @@ export default function ProgressSteps({ steps, currentStep = 0 }) {
   return (
     <div className={styles.progressSteps}>
       {steps.map((step, index) => (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`${styles.step} ${
-            index === currentStep ? styles.stepCurrent : 
+            index === currentStep ? styles.stepCurrent :
             index < currentStep ? styles.stepCompleted : ''
           }`}
         >

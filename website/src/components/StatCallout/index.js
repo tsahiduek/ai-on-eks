@@ -1,12 +1,12 @@
 import styles from './styles.module.css';
 
-export default function StatCallout({ 
-  icon, 
-  title, 
-  statNumber, 
-  statLabel, 
+export default function StatCallout({
+  icon,
+  title,
+  statNumber,
+  statLabel,
   description,
-  type = 'critical' 
+  type = 'critical'
 }) {
   return (
     <div className={`${styles.callout} ${styles[`callout${type.charAt(0).toUpperCase() + type.slice(1)}`]}`}>

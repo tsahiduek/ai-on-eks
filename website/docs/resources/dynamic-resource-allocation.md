@@ -38,61 +38,61 @@ import ProgressSteps from '@site/src/components/ProgressSteps';
 **Key Implementation Details:**
 
 <StatusGrid badges={[
-  { 
-    type: 'production', 
-    icon: '☸️', 
-    title: 'EKS Control Plane', 
-    value: 'v1.33+', 
-    note: 'DRA feature gates enabled' 
+  {
+    type: 'production',
+    icon: '☸️',
+    title: 'EKS Control Plane',
+    value: 'v1.33+',
+    note: 'DRA feature gates enabled'
   },
-  { 
-    type: 'production', 
-    icon: '🖥️', 
-    title: 'EKS Optimized NVIDIA AMI', 
-    value: 'Latest AMI', 
-    note: 'Pre-installed drivers' 
+  {
+    type: 'production',
+    icon: '🖥️',
+    title: 'EKS Optimized NVIDIA AMI',
+    value: 'Latest AMI',
+    note: 'Pre-installed drivers'
   },
-  { 
-    type: 'production', 
-    icon: '🔗', 
-    title: 'Managed Node Groups', 
-    value: 'Full DRA Support', 
-    note: 'Recommended approach' 
+  {
+    type: 'production',
+    icon: '🔗',
+    title: 'Managed Node Groups',
+    value: 'Full DRA Support',
+    note: 'Recommended approach'
   },
-  { 
-    type: 'info', 
-    icon: '🔧', 
-    title: 'Self-Managed Nodegroups', 
-    value: 'DRA Support', 
-    note: 'Manual configuration' 
+  {
+    type: 'info',
+    icon: '🔧',
+    title: 'Self-Managed Nodegroups',
+    value: 'DRA Support',
+    note: 'Manual configuration'
   },
-  { 
-    type: 'production', 
-    icon: '🛠️', 
-    title: 'NVIDIA GPU Operator', 
-    value: 'v25.3.0+', 
-    note: 'Required for DRA' 
+  {
+    type: 'production',
+    icon: '🛠️',
+    title: 'NVIDIA GPU Operator',
+    value: 'v25.3.0+',
+    note: 'Required for DRA'
   },
-  { 
-    type: 'production', 
-    icon: '⚡', 
-    title: 'NVIDIA DRA Driver', 
-    value: 'v25.3.0+', 
-    note: 'Core DRA functionality' 
+  {
+    type: 'production',
+    icon: '⚡',
+    title: 'NVIDIA DRA Driver',
+    value: 'v25.3.0+',
+    note: 'Core DRA functionality'
   },
-  { 
-    type: 'warning', 
-    icon: '🚧', 
-    title: 'Karpenter DRA Support', 
-    value: 'In Development', 
-    note: 'GitHub Issue #1231' 
+  {
+    type: 'warning',
+    icon: '🚧',
+    title: 'Karpenter DRA Support',
+    value: 'In Development',
+    note: 'GitHub Issue #1231'
   },
-  { 
-    type: 'beta', 
-    icon: '🔬', 
-    title: 'DRA Status', 
-    value: 'Beta (K8s v1.32+)', 
-    note: 'Technology Preview' 
+  {
+    type: 'beta',
+    icon: '🔬',
+    title: 'DRA Status',
+    value: 'Beta (K8s v1.32+)',
+    note: 'Technology Preview'
   }
 ]} />
 
@@ -135,7 +135,7 @@ For comprehensive guidance on AI/ML workloads on EKS, see the [AWS EKS Best Prac
 
 </details>
 
-<StatCallout 
+<StatCallout
   icon="💸"
   title="Enterprise GPU Utilization Crisis"
   statNumber="60%"
@@ -381,7 +381,7 @@ resourceClaims:
   .dra-innovations-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .strategy-grid {
     grid-template-columns: 1fr;
   }
@@ -650,13 +650,13 @@ On the selected node, the DRA driver:
 <details>
 <summary><strong>👇 In this example, you will provision JARK Cluster on Amazon EKS with DRA support</strong></summary>
 
-<ProgressSteps 
+<ProgressSteps
   steps={[
     { title: "Prerequisites", description: "Install required tools and dependencies" },
     { title: "Deploy", description: "Configure and run JARK stack installation" },
     { title: "Verify", description: "Test your DRA deployment and validate functionality" }
-  ]} 
-  currentStep={0} 
+  ]}
+  currentStep={0}
 />
 
 ### Prerequisites
@@ -705,13 +705,13 @@ The NVIDIA GPU Operator includes all necessary components:
 The NVIDIA DRA Driver is deployed as a separate Helm chart parallel to the GPU Operator.
 :::
 
-<ProgressSteps 
+<ProgressSteps
   steps={[
     { title: "Prerequisites", description: "Install required tools and dependencies" },
     { title: "Deploy", description: "Configure and run JARK stack installation" },
     { title: "Verify", description: "Test your DRA deployment and validate functionality" }
-  ]} 
-  currentStep={1} 
+  ]}
+  currentStep={1}
 />
 
 #### 3. Navigate to the deployment directory and run the install script:
@@ -733,13 +733,13 @@ This script will automatically provision and configure the following components:
 - To test MPS/time-slicing, manually update the `g6` node group’s `min_size` and `desired_size` via the EKS console.
 - To test MIG, you need at least one `p4d` or `p4de` instance, which requires a Capacity Block Reservation (CBR). Edit the file: `infra/base/terraform/eks.tf`. Set your actual `capacity_reservation_id` and change the `min_size` for the MIG node group to `1`
 
-<ProgressSteps 
+<ProgressSteps
   steps={[
     { title: "Prerequisites", description: "Install required tools and dependencies" },
     { title: "Deploy", description: "Configure and run JARK stack installation" },
     { title: "Verify", description: "Test your DRA deployment and validate functionality" }
-  ]} 
-  currentStep={2} 
+  ]}
+  currentStep={2}
 />
 
 #### 4. Verify Deployment
@@ -776,7 +776,7 @@ kubectl get deployments -A
 
 **Instance compatibility for testing:**
 - **Time-slicing and MPS**: Any G5 or G6 instance
-- **MIG partitioning**: P-series instances (P4d or higher)  
+- **MIG partitioning**: P-series instances (P4d or higher)
 - **IMEX use cases**: P6e-GB200 UltraServers
 
 Once all components are running, you can start testing the various DRA examples mentioned in the following sections.

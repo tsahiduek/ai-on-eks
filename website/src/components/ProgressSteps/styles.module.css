@@ -86,11 +86,11 @@
     flex-direction: column;
     gap: 1.5rem;
   }
-  
+
   .progressSteps::before {
     display: none;
   }
-  
+
   .step {
     flex-direction: row;
     max-width: none;
@@ -98,7 +98,7 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .stepNumber {
     margin-bottom: 0;
     width: 3rem;
@@ -106,7 +106,7 @@
     font-size: 1rem;
     flex-shrink: 0;
   }
-  
+
   .stepContent {
     text-align: left;
     flex: 1;

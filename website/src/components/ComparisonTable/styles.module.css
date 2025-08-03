@@ -107,7 +107,7 @@
   .comparisonRow {
     grid-template-columns: 1fr;
   }
-  
+
   .comparisonHeader > div,
   .capabilityName,
   .traditionalCell,
@@ -115,7 +115,7 @@
     border-right: none;
     border-bottom: 1px solid var(--ifm-color-emphasis-200);
   }
-  
+
   .capabilityName {
     background: var(--ifm-color-emphasis-100);
     font-weight: 700;
