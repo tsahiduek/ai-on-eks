@@ -30,6 +30,74 @@
   --ifm-background-color: #ffffff;
 }
 
+/* Enhanced Tab Content Styling */
+.tabs-container .markdown {
+  padding: 1.5rem;
+}
+
+.tabs-container .markdown > *:first-child {
+  margin-top: 0;
+}
+
+.tabs-container .markdown h3,
+.tabs-container .markdown h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.tabs-container .markdown p,
+.tabs-container .markdown ul,
+.tabs-container .markdown ol {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.tabs-container .markdown ul {
+  padding-left: 1.5rem;
+}
+
+.tabs-container .markdown .admonition {
+  margin: 1.5rem 0;
+}
+
+/* Better spacing for tab content */
+.tabs-container [role="tabpanel"] {
+  padding: 1.5rem;
+  margin: 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: var(--ifm-background-surface-color);
+}
+
+.tabs-container [role="tabpanel"] > *:first-child {
+  margin-top: 0;
+}
+
+.tabs-container [role="tabpanel"] > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Tab header styling improvements */
+.tabs-container .tabs {
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.tabs-container .tabs__item {
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.25rem;
+}
+
+.tabs-container .tabs__item--active {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-bottom: 1px solid var(--ifm-background-surface-color);
+  margin-bottom: -1px;
+}
+
+/* TL;DR styling now handled by TldrSection component */
+
 html[data-theme="dark"] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;

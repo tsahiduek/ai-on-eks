@@ -7,32 +7,102 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 import Admonition from '@theme/Admonition';
+import StatusGrid from '@site/src/components/StatusGrid';
+import StatCallout from '@site/src/components/StatCallout';
+import SectionDivider from '@site/src/components/SectionDivider';
+import ComparisonTable from '@site/src/components/ComparisonTable';
+import ProgressSteps from '@site/src/components/ProgressSteps';
 
 # Dynamic Resource Allocation for GPUs on Amazon EKS
 
 <details>
-<summary><strong>📚 TL;DR – Dynamic GPU Scheduling with DRA on EKS</strong></summary>
+<summary><strong>🚀 TL;DR – Dynamic GPU Scheduling with DRA on EKS</strong></summary>
 
 **DRA is the next-generation GPU scheduling approach in Kubernetes.** Dynamic Resource Allocation (DRA) provides advanced GPU management capabilities beyond traditional device plugins. Here's what matters:
 
 ### DRA Advantages over Traditional GPU Scheduling
 
-- **Fine-grained resource control** – Request specific GPU memory amounts, not just whole devices
-- **Per-workload sharing strategies** – Choose `mps`, `time-slicing`, `mig`, or `exclusive` per pod, not cluster-wide
-- **Topology-aware scheduling** – Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), and GPU interconnects for multi-GPU workloads
-- **Advanced GPU features** – Required for [Amazon EC2 P6e-GB200 UltraServers](https://aws.amazon.com/ec2/instance-types/p6/) [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), and next-gen GPU capabilities
-- **Coexistence-friendly** – Can run alongside traditional device plugins during transition
+- **🎯 Fine-grained resource control** – Request specific GPU memory amounts, not just whole devices
+- **🔄 Per-workload sharing strategies** – Choose `mps`, `time-slicing`, `mig`, or `exclusive` per pod, not cluster-wide
+- **🧠 Topology-aware scheduling** – Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), and GPU interconnects for multi-GPU workloads
+- **⚡ Advanced GPU features** – Required for [Amazon EC2 P6e-GB200 UltraServers](https://aws.amazon.com/ec2/instance-types/p6/) [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html), Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/), and next-gen GPU capabilities
+- **🤝 Coexistence-friendly** – Can run alongside traditional device plugins during transition
 
-### Current Implementation Status
+<Admonition type="warning" title="Amazon EC2 P6e-GB200 UltraServer Requirement">
 
-- **Kubernetes v1.32+** – DRA is **beta** but **disabled by default** (requires feature gate enablement)
+- **Traditional scheduling unsupported** – Amazon EC2 P6e-GB200 UltraServers **require DRA** and won't work with NVIDIA device plugin + kube-scheduler
+- **DRA mandatory** – Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) and [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) capabilities only available through DRA
+
+</Admonition>
+
+**Key Implementation Details:**
+
+<StatusGrid badges={[
+  { 
+    type: 'production', 
+    icon: '☸️', 
+    title: 'EKS Control Plane', 
+    value: 'v1.33+', 
+    note: 'DRA feature gates enabled' 
+  },
+  { 
+    type: 'production', 
+    icon: '🖥️', 
+    title: 'EKS Optimized NVIDIA AMI', 
+    value: 'Latest AMI', 
+    note: 'Pre-installed drivers' 
+  },
+  { 
+    type: 'production', 
+    icon: '🔗', 
+    title: 'Managed Node Groups', 
+    value: 'Full DRA Support', 
+    note: 'Recommended approach' 
+  },
+  { 
+    type: 'info', 
+    icon: '🔧', 
+    title: 'Self-Managed Nodegroups', 
+    value: 'DRA Support', 
+    note: 'Manual configuration' 
+  },
+  { 
+    type: 'production', 
+    icon: '🛠️', 
+    title: 'NVIDIA GPU Operator', 
+    value: 'v25.3.0+', 
+    note: 'Required for DRA' 
+  },
+  { 
+    type: 'production', 
+    icon: '⚡', 
+    title: 'NVIDIA DRA Driver', 
+    value: 'v25.3.0+', 
+    note: 'Core DRA functionality' 
+  },
+  { 
+    type: 'warning', 
+    icon: '🚧', 
+    title: 'Karpenter DRA Support', 
+    value: 'In Development', 
+    note: 'GitHub Issue #1231' 
+  },
+  { 
+    type: 'beta', 
+    icon: '🔬', 
+    title: 'DRA Status', 
+    value: 'Beta (K8s v1.32+)', 
+    note: 'Technology Preview' 
+  }
+]} />
+
+
 - **EKS v1.33** – DRA feature gates enabled in EKS-optimized configurations
 - **For detailed DRA implementation** – See [Kubernetes DRA documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/)
 - **Node provisioning compatibility:**
-  - **Managed Node Groups** – DRA support
-  - **Self-Managed Node Groups** – DRA support (requires manual configuration, no AWS support)
-  - **Karpenter** – DRA support in development ([Issue #1231](https://github.com/kubernetes-sigs/karpenter/issues/1231))
-- **NVIDIA GPU Operator v25.3.0+** and **NVIDIA DRA Driver v25.3.0+** required
+  - **Managed Node Groups** – Full DRA support 🎯
+  - **Self-Managed Node Groups** – DRA support (requires manual configuration) 🔧
+  - **Karpenter** – DRA support in development ([Issue #1231](https://github.com/kubernetes-sigs/karpenter/issues/1231)) 🏗️
 - **Coexistence** – Traditional device plugin and DRA can run simultaneously
 
 ### Why Managed/Self-Managed Node Groups vs Karpenter for DRA?
@@ -44,16 +114,10 @@ import Admonition from '@theme/Admonition';
 ### Can I Use Both Traditional GPU Allocation and DRA Together?
 
 - **Coexistence supported** – Both can run simultaneously on the same cluster
-- **Wave-by-wave migration** – Recommended gradual adoption approach
 - **DRA is the future** – NVIDIA and Kubernetes moving exclusively to DRA
 - **Migration strategy** – Use DRA for new workloads, traditional for existing production
 
-<Admonition type="warning" title="Amazon EC2 P6e-GB200 UltraServer Requirement">
 
-- **Traditional scheduling unsupported** – Amazon EC2 P6e-GB200 UltraServers **require DRA** and won't work with NVIDIA device plugin + kube-scheduler
-- **DRA mandatory** – Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) and [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) capabilities only available through DRA
-
-</Admonition>
 
 ### Production Readiness
 
@@ -70,6 +134,19 @@ For comprehensive guidance on AI/ML workloads on EKS, see the [AWS EKS Best Prac
 </Admonition>
 
 </details>
+
+<StatCallout 
+  icon="💸"
+  title="Enterprise GPU Utilization Crisis"
+  statNumber="60%"
+  statLabel="GPU capacity wasted"
+  description="Despite high demand, enterprise AI platforms consistently waste over half their GPU resources due to scheduling limitations. This represents millions in infrastructure costs."
+  type="critical"
+/>
+
+**Even in high-demand AI clusters, GPU utilization frequently remains below 40%.** This isn't a configuration issue — it's a fundamental limitation of how Kubernetes abstracts GPU resources. Organizations are paying premium prices for GPU instances while letting the majority of compute power sit idle.
+
+<SectionDivider icon="🎛️" />
 
 ## The GPU Scheduling Challenge in Kubernetes
 
@@ -106,7 +183,7 @@ Modern AI workloads have diverse requirements that don't fit this binary model:
 - **Topology blindness** - Multi-GPU jobs get suboptimal placement, degrading [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) performance
 - **Cost explosion** - Organizations overprovision GPUs to work around scheduling inefficiencies
 
-**Real-world impact:** A typical enterprise AI platform running mixed workloads wastes 60% of GPU capacity due to these scheduling limitations.
+<SectionDivider icon="💎" />
 
 ## Enter Dynamic Resource Allocation (DRA)
 
@@ -139,27 +216,177 @@ resourceClaims:
 
 ### Key DRA Innovations
 
-**1. Fine-grained Resource Control**
-- Request specific GPU memory amounts (e.g., 16Gi out of 80Gi available)
-- Specify compute requirements independent of memory needs
-- Define topology constraints for multi-GPU workloads
-- **Note:** ResourceClaims and Pods must be in the same namespace
+<div className="dra-innovations-grid">
+  <div className="innovation-card innovation-card--primary">
+    <div className="innovation-card__header">
+      <div className="innovation-card__icon">🎯</div>
+      <h4>Fine-grained Resource Control</h4>
+    </div>
+    <div className="innovation-card__content">
+      <ul className="innovation-card__features">
+        <li>Request specific GPU memory amounts (e.g., 16Gi out of 80Gi available)</li>
+        <li>Specify compute requirements independent of memory needs</li>
+        <li>Define topology constraints for multi-GPU workloads</li>
+      </ul>
+      <div className="innovation-card__note">
+        <strong>Note:</strong> ResourceClaims and Pods must be in the same namespace
+      </div>
+    </div>
+  </div>
 
-**2. Per-Workload Sharing Strategies**
-- **MPS** for concurrent small workloads with memory isolation
-- **Time-slicing** for workloads with different peak usage patterns
-- **MIG** for hardware-level isolation in multi-tenant environments
-- **Exclusive** for performance-critical training jobs
+  <div className="innovation-card innovation-card--secondary">
+    <div className="innovation-card__header">
+      <div className="innovation-card__icon">🔄</div>
+      <h4>Per-Workload Sharing Strategies</h4>
+    </div>
+    <div className="innovation-card__content">
+      <div className="strategy-grid">
+        <div className="strategy-item">
+          <strong>MPS</strong> - Concurrent small workloads with memory isolation
+        </div>
+        <div className="strategy-item">
+          <strong>Time-slicing</strong> - Workloads with different peak usage patterns
+        </div>
+        <div className="strategy-item">
+          <strong>MIG</strong> - Hardware-level isolation in multi-tenant environments
+        </div>
+        <div className="strategy-item">
+          <strong>Exclusive</strong> - Performance-critical training jobs
+        </div>
+      </div>
+    </div>
+  </div>
 
-**3. Topology-Aware Scheduling**
-- Understands [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/) connections between GPUs
-- Leverages [IMEX](https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html) for [Amazon EC2 P6e-GB200 UltraServer](https://aws.amazon.com/ec2/instance-types/p6/) clusters
-- Optimizes placement for distributed training workloads
+  <div className="innovation-card innovation-card--success">
+    <div className="innovation-card__header">
+      <div className="innovation-card__icon">🌐</div>
+      <h4>Topology-Aware Scheduling</h4>
+    </div>
+    <div className="innovation-card__content">
+      <ul className="innovation-card__features">
+        <li>Understands <a href="https://www.nvidia.com/en-us/data-center/nvlink/">NVLink</a> connections between GPUs</li>
+        <li>Leverages <a href="https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html">IMEX</a> for <a href="https://aws.amazon.com/ec2/instance-types/p6/">Amazon EC2 P6e-GB200 UltraServer</a> clusters</li>
+        <li>Optimizes placement for distributed training workloads</li>
+      </ul>
+    </div>
+  </div>
 
-**4. Future-Proof Architecture**
-- Required for next-generation systems like [Amazon EC2 P6e-GB200 UltraServers](https://aws.amazon.com/ec2/instance-types/p6/)
-- Enables advanced features like Multi-Node [NVLink](https://www.nvidia.com/en-us/data-center/nvlink/)
-- Supports emerging GPU architectures and sharing technologies
+  <div className="innovation-card innovation-card--warning">
+    <div className="innovation-card__header">
+      <div className="innovation-card__icon">🚀</div>
+      <h4>Future-Proof Architecture</h4>
+    </div>
+    <div className="innovation-card__content">
+      <ul className="innovation-card__features">
+        <li>Required for next-generation systems like <a href="https://aws.amazon.com/ec2/instance-types/p6/">Amazon EC2 P6e-GB200 UltraServers</a></li>
+        <li>Enables advanced features like Multi-Node <a href="https://www.nvidia.com/en-us/data-center/nvlink/">NVLink</a></li>
+        <li>Supports emerging GPU architectures and sharing technologies</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style jsx>{`
+.dra-innovations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.innovation-card {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.innovation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.innovation-card--primary {
+  border-left: 4px solid var(--ifm-color-primary);
+}
+
+.innovation-card--secondary {
+  border-left: 4px solid var(--ifm-color-secondary);
+}
+
+.innovation-card--success {
+  border-left: 4px solid var(--ifm-color-success);
+}
+
+.innovation-card--warning {
+  border-left: 4px solid var(--ifm-color-warning);
+}
+
+.innovation-card__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.innovation-card__icon {
+  font-size: 2rem;
+  margin-right: 0.75rem;
+}
+
+.innovation-card__header h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.innovation-card__content {
+  color: var(--ifm-color-content-secondary);
+}
+
+.innovation-card__features {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.innovation-card__features li {
+  margin-bottom: 0.5rem;
+}
+
+.innovation-card__note {
+  background: var(--ifm-color-warning-contrast-background);
+  border: 1px solid var(--ifm-color-warning-contrast-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.strategy-item {
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border-left: 3px solid var(--ifm-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .dra-innovations-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .strategy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+`}</style>
 
 ### Understanding IMEX, ComputeDomains, and Amazon EC2 P6e-GB200 Multi-Node Scheduling
 
@@ -293,19 +520,92 @@ style D_GPU fill:#a5d6a7,stroke:#2e7d32,color:#000
 
 ### Technical Capabilities Comparison
 
-| Capability                      | Traditional Device Plugin                       | Dynamic Resource Allocation (DRA)                          |
-|--------------------------------|--------------------------------------------------|------------------------------------------------------------|
-| **Resource Request Model**     | Simple integers (`nvidia.com/gpu: 1`)            | ✅ Structured claims via `ResourceClaimTemplate` and `ResourceClaims` |
-| **GPU Memory Specification**   | ❌ All-or-nothing allocation                     | ✅ Supports memory-based constraints and selectors         |
-| **Sharing Configuration**      | ⚠️ Static cluster-wide ConfigMaps                | ✅ Per-workload sharing strategies via claims              |
-| **Multi-GPU Topology Awareness** | ❌ No topology coordination                    | ✅ Scheduler can use DeviceClass selectors for topology (NVLink, IMEX)  |
-| **Device Selection**           | ❌ Random or round-robin                         | ✅ CEL-based filtering and node/device matching            |
-| **Runtime Reconfiguration**    | ❌ Requires pod deletion and redeployment        | ✅ Dynamic reallocation possible without restarts          |
-| **MPS/Time-slicing Support**   | ⚠️ Yes, but limited to global config             | ✅ Fully supported via ResourceSlices per workload         |
-| **MIG Support**                | ⚠️ Limited - static MIG partitions require manual setup | ✅ Full support for MIG profiles via dynamic claims and driver integration |
-| **Mixed Sharing Strategies**   | ❌ One strategy cluster-wide                     | ✅ Strategy defined per pod/template for workload isolation |
+<ComparisonTable capabilities={[
+  {
+    name: "Resource Request Model",
+    traditional: {
+      status: "none",
+      icon: "❌",
+      description: "Simple integers",
+      code: "nvidia.com/gpu: 1"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "Structured claims via",
+      code: "ResourceClaimTemplate"
+    }
+  },
+  {
+    name: "GPU Memory Specification",
+    traditional: {
+      status: "none",
+      icon: "❌",
+      description: "All-or-nothing allocation"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "Memory-based constraints and selectors"
+    }
+  },
+  {
+    name: "Sharing Configuration",
+    traditional: {
+      status: "limited",
+      icon: "⚠️",
+      description: "Static cluster-wide ConfigMaps"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "Per-workload sharing strategies"
+    }
+  },
+  {
+    name: "Multi-GPU Topology Awareness",
+    traditional: {
+      status: "none",
+      icon: "❌",
+      description: "No topology coordination"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "DeviceClass selectors for NVLink, IMEX"
+    }
+  },
+  {
+    name: "Runtime Reconfiguration",
+    traditional: {
+      status: "none",
+      icon: "❌",
+      description: "Requires pod deletion and redeployment"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "Dynamic reallocation without restarts"
+    }
+  },
+  {
+    name: "MIG Support",
+    traditional: {
+      status: "limited",
+      icon: "⚠️",
+      description: "Limited - static partitions, manual setup"
+    },
+    dra: {
+      status: "full",
+      icon: "✅",
+      description: "Full MIG profiles via dynamic claims"
+    }
+  }
+]} />
 
 
+
+<SectionDivider icon="⚙️" />
 
 ## How DRA Actually Works: The Complete Technical Flow
 
@@ -349,6 +649,15 @@ On the selected node, the DRA driver:
 
 <details>
 <summary><strong>👇 In this example, you will provision JARK Cluster on Amazon EKS with DRA support</strong></summary>
+
+<ProgressSteps 
+  steps={[
+    { title: "Prerequisites", description: "Install required tools and dependencies" },
+    { title: "Deploy", description: "Configure and run JARK stack installation" },
+    { title: "Verify", description: "Test your DRA deployment and validate functionality" }
+  ]} 
+  currentStep={0} 
+/>
 
 ### Prerequisites
 
@@ -396,6 +705,15 @@ The NVIDIA GPU Operator includes all necessary components:
 The NVIDIA DRA Driver is deployed as a separate Helm chart parallel to the GPU Operator.
 :::
 
+<ProgressSteps 
+  steps={[
+    { title: "Prerequisites", description: "Install required tools and dependencies" },
+    { title: "Deploy", description: "Configure and run JARK stack installation" },
+    { title: "Verify", description: "Test your DRA deployment and validate functionality" }
+  ]} 
+  currentStep={1} 
+/>
+
 #### 3. Navigate to the deployment directory and run the install script:
 
 ```bash title="Deploy JARK Stack with DRA"
@@ -413,12 +731,55 @@ This script will automatically provision and configure the following components:
 > ⚠️ Both node groups are initialized with zero nodes to avoid unnecessary cost.
 
 - To test MPS/time-slicing, manually update the `g6` node group’s `min_size` and `desired_size` via the EKS console.
-- To test MIG, you need at least one `p4d` or `p4de` instance, which requires a Capacity Block Reservation (CBR).
-    Edit the file: `infra/base/terraform/eks.tf`. Set your actual `capacity_reservation_id` and change the `min_size` for the MIG node group to `1`
-- NVIDIA GPU Operator
-- NVIDIA DRA Driver
-- All required Kubernetes components for managing and running GPU workloads
-- Proper configuration of nodes to support dynamic GPU scheduling
+- To test MIG, you need at least one `p4d` or `p4de` instance, which requires a Capacity Block Reservation (CBR). Edit the file: `infra/base/terraform/eks.tf`. Set your actual `capacity_reservation_id` and change the `min_size` for the MIG node group to `1`
+
+<ProgressSteps 
+  steps={[
+    { title: "Prerequisites", description: "Install required tools and dependencies" },
+    { title: "Deploy", description: "Configure and run JARK stack installation" },
+    { title: "Verify", description: "Test your DRA deployment and validate functionality" }
+  ]} 
+  currentStep={2} 
+/>
+
+#### 4. Verify Deployment
+
+Follow these verification steps to ensure your DRA deployment is working correctly:
+
+**Step 1: Configure kubectl access**
+
+Update your local kubeconfig to access the Kubernetes cluster:
+
+```bash
+aws eks update-kubeconfig --name jark-stack  # Replace with your EKS cluster name
+```
+
+**Step 2: Verify worker nodes**
+
+First, let's verify that worker nodes are running in the cluster:
+
+```bash
+kubectl get nodes
+```
+
+**Expected output:** You should see two x86 instances from the core node group, plus any GPU instances (g6, p4d, etc.) that you manually scaled up via the EKS console.
+
+**Step 3: Verify DRA components**
+
+Run this command to verify all deployments, including the NVIDIA GPU Operator and NVIDIA DRA Driver:
+
+```bash
+kubectl get deployments -A
+```
+
+**Expected output:** All pods should be in `Running` state before proceeding to test the examples below.
+
+**Instance compatibility for testing:**
+- **Time-slicing and MPS**: Any G5 or G6 instance
+- **MIG partitioning**: P-series instances (P4d or higher)  
+- **IMEX use cases**: P6e-GB200 UltraServers
+
+Once all components are running, you can start testing the various DRA examples mentioned in the following sections.
 
 </details>
 
@@ -464,12 +825,15 @@ The NVIDIA DRA Driver runs as an independent Helm chart parallel to the NVIDIA G
 
 
 
+<SectionDivider icon="🎲" />
+
 ## GPU Sharing Strategies: Technical Deep Dive
 
 Understanding GPU sharing technologies is crucial for optimizing resource utilization. Each strategy provides different benefits and addresses specific use cases.
 
+<div className="tabs-container">
 <Tabs groupId="sharing-strategies">
-<TabItem value="basic" label="🎯 Basic Allocation" default>
+<TabItem value="basic" label="💎 Basic Allocation" default>
 
 ### Basic GPU Allocation
 
@@ -508,7 +872,7 @@ kubectl get pods -n gpu-test1 -w
 - Legacy applications not designed for GPU sharing
 
 </TabItem>
-<TabItem value="timeslicing" label="⏱️ Time-Slicing">
+<TabItem value="timeslicing" label="⌛ Time-Slicing">
 
 ### What is Time-Slicing?
 
@@ -563,7 +927,7 @@ No memory or fault isolation between workloads. One workload can affect others t
 :::
 
 </TabItem>
-<TabItem value="mps" label="🔄 Multi-Process Service (MPS)">
+<TabItem value="mps" label="🌊 Multi-Process Service (MPS)">
 
 ### What is MPS?
 
@@ -619,7 +983,7 @@ MPS eliminates context switching overhead and enables true parallelism. Ideal fo
 :::
 
 </TabItem>
-<TabItem value="mig" label="🔧 Multi-Instance GPU (MIG)">
+<TabItem value="mig" label="🏗️ Multi-Instance GPU (MIG)">
 
 ### What is MIG?
 
@@ -689,6 +1053,7 @@ kubectl get pods -n mig-gpu -w
 | **Production Multi-tenant** | MIG | Hardware isolation |
 | **Large Model Training** | Basic Allocation | Maximum performance |
 | **Development/Testing** | Time-slicing | Flexibility and simplicity |
+</div>
 
 ---
 
