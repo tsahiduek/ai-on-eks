@@ -7,12 +7,8 @@ enable_argocd                    = true
 enable_cert_manager              = true
 enable_kube_prometheus_stack     = true
 enable_slurm_operator            = true
-enable_slurm_cluster             = true
 enable_ingress_nginx             = false
 enable_service_mutator_webhook   = true
-image_repository                 = ""
-image_tag                        = ""
-ssh_key                          = ""
 # region                         = "us-west-2"
 # eks_cluster_version            = "1.32"
 

@@ -2,7 +2,7 @@
 sidebar_label: Slurm on EKS
 ---
 
-import CollapsibleContent from '../../../src/components/CollapsibleContent';
+import CollapsibleContent from '../../../../src/components/CollapsibleContent';
 
 # Slurm on EKS
 
@@ -36,7 +36,7 @@ When paired with Amazon EKS, the Slinky Project unlocks the ability for enterpri
 
 ### Slurm on EKS Architecture
 
-![alt text](img/Slurm-on-EKS.png)
+![alt text](../img/Slurm-on-EKS.png)
 
 The diagram above depicts the Slurm on EKS deployment outlined in this guide. An Amazon EKS cluster acts as an orchestration layer, with core Slurm Cluster components hosted on a managed node group of m5.xlarge instances, while a Karpenter NodePool manages the deployment of GPU accelerated compute nodes for the slurmd pods to run on. The Slinky Slurm operator and Slurm cluster are automatically deployed as ArgoCD applications.
 
@@ -83,16 +83,15 @@ set your `export AWS_PROFILE="<PROFILE_name>"` to the desired profile name
 **2. Review and customize configurations:**
 
 - Check available addons in `infra/base/terraform/variables.tf`
-- Modify addon settings in `infra/slinky-slurm/terraform/blueprint.tfvars` as needed
-- Update the AWS region in `blueprint.tfvars`
+- Modify addon settings in `infra/slinky-slurm/terraform/blueprint.tfvars` as needed. 
 
 **3. Review the slurmd container image build automation:**
 
-By default, the `infra/slinky-slurm/install.sh` script will trigger setup steps to automatically build a new slurmd container image using the `infra/slinky-slurm/dlc-slurmd.Dockerfile`, which builds on top of an [AWS Deep Learning Container (DLC)](https://github.com/aws/deep-learning-containers) to include Python 3.12.8 + PyTorch 2.6.0 + CUDA 12.6 + NCCL 2.23.4 + EFA Installer 1.38.0 (bundled with OFI NCCL plugin) pre-installed in the container image.
+By default, the `blueprints/training/slinky-slurm/install.sh` script will trigger setup steps to automatically build a new slurmd container image using the `blueprints/training/slinky-slurm/dlc-slurmd.Dockerfile`, which builds on top of an [AWS Deep Learning Container (DLC)](https://github.com/aws/deep-learning-containers) to include Python 3.12.8 + PyTorch 2.6.0 + CUDA 12.6 + NCCL 2.23.4 + EFA Installer 1.38.0 (bundled with OFI NCCL plugin) pre-installed in the container image.
 
 It will then create a new ECR repository and push this image to the repository. If not already present on your machine, a new SSH key `~/.ssh/id_ed25519_slurm` will be created for Slurm login pod access as well.
 
-The image repository URI, image tag, and public SSH key are then set in `infra/slinky-slurm/terraform/blueprint.tfvars` to be used in the deployment of the Slurm cluster ArgoCD application.
+The image repository URI, image tag, and public SSH key are then used to generate a new `slurm-values.yaml` file based on the `blueprints/training/slinky-slurm/slurm-values.yaml.template` file to be used in the deployment of the Slurm cluster.
 
 To customize this behavior, you can add the following optional flags:
 | Component | Description | Default Value|
@@ -101,25 +100,25 @@ To customize this behavior, you can add the following optional flags:
 |`--tag`|The image tag |25.05.0-ubuntu24.04|
 |`--region`| The AWS region of your ECR repository | inferred from the AWS CLI configuration or set to `us-west-2`|
 |`--skip-build`| Set if using an existing image already in ECR | `false`|
-|`--skip-setup`| Set if you previously added `image_repository`, `image_tag`, and `ssh_key` values in `infra/slinky-slurm/terraform/blueprint.tfvars`|`false`|
+|`--skip-setup`| Set if you previously generate a `blueprints/training/slinky-slurm/slurm-values.yaml` file |`false`|
 |`--help`| View flag options |`false`|
 
 For example, if you've already built and pushed a custom slurmd container image to a custom ECR repository, add the following flags and values:
-```
-cd ai-on-eks/infra/slinky-slurm
-./install.sh --repo-name my-custom-repo --tag my-custom-tag --skip-build
+```bash
+cd ai-on-eks/blueprints/training/slinky-slurm
+./install.sh --repo-name dlc-slurmd --tag 25.05.0-ubuntu24.04 --skip-build
 ```
 The script will then validate that the container image exists in your ECR repo before proceeding.
 
-If you wish to use a custom Dockerfile, simply overwrite the contents of the `infra/slinky-slurm/dlc-slurmd.Dockerfile` before executing `infra/slinky-slurm/install.sh`.
+If you wish to use a custom Dockerfile, simply overwrite the contents of the `blueprints/training/slinky-slurm/dlc-slurmd.Dockerfile` before executing `blueprints/training/slinky-slurm/install.sh`.
 
-If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `infra/slinky-slurm/setup.sh` script directly using the same flags.
+If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `blueprints/training/slinky-slurm/setup.sh` script directly using the same flags. This script will also generate a new `blueprints/training/slinky-slurm/slurm-values.yaml` file for you. 
 
 **4. Trigger deployment:**
 
 Navigate into the `slinky-slurm` directory and run `install.sh` script:
 ```bash
-cd ai-on-eks/infra/slinky-slurm
+cd ai-on-eks/blueprints/training/slinky-slurm
 ./install.sh
 ```
 </CollapsibleContent>
@@ -482,8 +481,8 @@ exit
 <CollapsibleContent header={<h3><span>CloudWatch Container Insights</span></h3>}>
 Navigate to [Amazon CloudWatch Container Insights](https://console.aws.amazon.com/cloudwatch/home?#container-insights:?~(query~()~context~(orchestrationService~'eks))) to view GPU utilization and EFA network metrics:
 
-![alt text](img/GPU-Insights.png)
-![alt text](img/EFA-Insights.png)
+![alt text](../img/GPU-Insights.png)
+![alt text](../img/EFA-Insights.png)
 
 </CollapsibleContent>
 
@@ -496,10 +495,9 @@ To avoid unwanted charges to your AWS account, delete all the AWS resources crea
 This script will cleanup the environment using `-target` option to ensure all the resources are deleted in correct order.
 
 ```bash
-cd ai-on-eks/infra/slinky-slurm
+cd ai-on-eks/blueprints/training/slinky-slurm
 ```
 ```
 ./cleanup.sh
 ```
-
 </CollapsibleContent>

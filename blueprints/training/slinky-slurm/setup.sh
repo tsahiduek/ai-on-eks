@@ -100,19 +100,8 @@ fi
 # Get the public key
 SSH_KEY="$(cat ~/.ssh/id_ed25519_slurm.pub)"
 
-# Set the values in blueprint.tfvars (cross-platform sed)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    sed -i '' \
-      -e "s|image_repository.*= \".*\"|image_repository = \"${IMAGE_REPOSITORY}\"|" \
-      -e "s|image_tag.*= \".*\"|image_tag = \"${IMAGE_TAG}\"|" \
-      -e "s|ssh_key.*= \".*\"|ssh_key = \"${SSH_KEY}\"|" \
-      terraform/blueprint.tfvars
-else
-    # Linux
-    sed -i \
-      -e "s|image_repository.*= \".*\"|image_repository = \"${IMAGE_REPOSITORY}\"|" \
-      -e "s|image_tag.*= \".*\"|image_tag = \"${IMAGE_TAG}\"|" \
-      -e "s|ssh_key.*= \".*\"|ssh_key = \"${SSH_KEY}\"|" \
-      terraform/blueprint.tfvars
-fi
+# Generate slurm-values.yaml from template
+sed -e "s|\${image_repository}|${IMAGE_REPOSITORY}|g" \
+    -e "s|\${image_tag}|${IMAGE_TAG}|g" \
+    -e "s|\${ssh_key}|${SSH_KEY}|g" \
+    slurm-values.yaml.template > slurm-values.yaml

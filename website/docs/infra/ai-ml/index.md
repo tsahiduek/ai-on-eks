@@ -73,6 +73,7 @@ Each stack inherits the `base` stack's components. These components include:
 | `enable_service_mutator_webhook`         | Enable service-mutator webhook for AWS Load Balancer Controller | `false`      |
 | `enable_ingress_nginx`                   | Enable ingress-nginx addon                          | `true`                   |
 | `enable_cert_manager`                    | Enable Cert Manager                                 | `false`                  |
+| `enable_slurm_operator`                  | Enable the Slinky Slurm Operator (with Cert Manager)|  `false`                 |
 
 ### JupyterHub
 
@@ -85,16 +86,6 @@ Each stack inherits the `base` stack's components. These components include:
 | `oauth_jupyter_client_id`     | oauth clientid for JupyterHub. Only used for oauth                                    | `""`    |
 | `oauth_jupyter_client_secret` | oauth client secret. Only used for oauth                                              | `""`    |
 | `oauth_username_key`          | oauth field for username (e.g. `preferred_username`). Only needed for oauth           | `""`    |
-
-### Slurm on EKS
-
-| Variable Name                            | Description                                         | Default                  |
-|------------------------------------------|-----------------------------------------------------|--------------------------|
-| `enable_slurm_operator`                  | Enable the Slinky Slurm Operator (with Cert Manager)|  `false`                 |
-| `enable_slurm_cluster`                   | Enable the Slinky Slurm Cluster  (with Slurm Operator)| `false`                |
-| `image_repository`                       | Amazon ECR container image URI used for the slurmd NodeSet|     `""`           |
-| `image_tag`                              | Container image tag used for the slurmd NodeSet| `""`|
-| `ssh_key`                                | Public SSH key for accessing slurm-login service| `""`|
 
 ## Custom Stacks
 
