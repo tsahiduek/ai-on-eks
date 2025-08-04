@@ -277,7 +277,7 @@ variable "enable_nvidia_dcgm_exporter" {
   default     = true
 }
 
-# Cert Manager 
+# Cert Manager
 variable "enable_cert_manager" {
   description = "Enable cert-manager addon"
   type        = bool

@@ -98,5 +98,3 @@ resource "kubectl_manifest" "slurm_operator_yaml" {
     kubectl_manifest.cert_manager_yaml
   ]
 }
-
-

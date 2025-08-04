@@ -30,10 +30,6 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.6.0" # Replace with the appropriate version of the random provider
     }
-    null = {
-      source  = "hashicorp/null"
-      version = ">= 3.0.0"
-    }
   }
 
   # ##  Used for end-to-end testing on project; update to suit your needs

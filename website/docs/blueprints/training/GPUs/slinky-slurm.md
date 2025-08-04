@@ -83,7 +83,7 @@ set your `export AWS_PROFILE="<PROFILE_name>"` to the desired profile name
 **2. Review and customize configurations:**
 
 - Check available addons in `infra/base/terraform/variables.tf`
-- Modify addon settings in `infra/slinky-slurm/terraform/blueprint.tfvars` as needed. 
+- Modify addon settings in `infra/slinky-slurm/terraform/blueprint.tfvars` as needed.
 
 **3. Review the slurmd container image build automation:**
 
@@ -112,7 +112,7 @@ The script will then validate that the container image exists in your ECR repo b
 
 If you wish to use a custom Dockerfile, simply overwrite the contents of the `blueprints/training/slinky-slurm/dlc-slurmd.Dockerfile` before executing `blueprints/training/slinky-slurm/install.sh`.
 
-If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `blueprints/training/slinky-slurm/setup.sh` script directly using the same flags. This script will also generate a new `blueprints/training/slinky-slurm/slurm-values.yaml` file for you. 
+If you wish to build and push your container image without triggering a Terraform deployment, you can also run the `blueprints/training/slinky-slurm/setup.sh` script directly using the same flags. This script will also generate a new `blueprints/training/slinky-slurm/slurm-values.yaml` file for you.
 
 **4. Trigger deployment:**
 
