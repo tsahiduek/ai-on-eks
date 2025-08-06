@@ -72,20 +72,20 @@ module "eks_blueprints_addons" {
   #---------------------------------------
   # AWS Load Balancer Controller Add-on
   #---------------------------------------
-  enable_aws_load_balancer_controller = true
+  enable_aws_load_balancer_controller = var.enable_aws_load_balancer_controller
   # turn off the mutating webhook for services because we are using
   # service.beta.kubernetes.io/aws-load-balancer-type: external
   aws_load_balancer_controller = {
     set = [{
       name  = "enableServiceMutatorWebhook"
-      value = "false"
+      value = var.enable_service_mutator_webhook
     }]
   }
 
   #---------------------------------------
   # Ingress Nginx Add-on
   #---------------------------------------
-  enable_ingress_nginx = true
+  enable_ingress_nginx = var.enable_ingress_nginx
   ingress_nginx = {
     version = "4.12.1"
     values  = [templatefile("${path.module}/helm-values/ingress-nginx-values.yaml", {})]
