@@ -1,3 +1,4 @@
+# Inter-pod anti-affinity and node affinity for non-compute components
 commonAffinity: &commonAffinity
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -22,7 +23,7 @@ commonAffinity: &commonAffinity
 # Slurm controller (slurmctld) configurations.
 controller:
   affinity: *commonAffinity
-  persistence: 
+  persistence:
     storageClass: gp3
 
 # Slurm accounting (slurmdbd) configurations.
@@ -33,7 +34,7 @@ accounting:
 mariadb:
   primary:
     affinity: *commonAffinity
-    persistence: 
+    persistence:
       storageClass: gp3
 
 # Slurm REST API (slurmrestd) configurations.
