@@ -309,7 +309,9 @@ module "data_addons" {
         amiFamily: Bottlerocket
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
-          id: ${module.vpc.private_subnets[2]}
+          tags:
+            karpenter.sh/discovery: "${module.eks.cluster_name}"
+            Name: "${module.eks.cluster_name}-private-secondary*" # Only seconddary cidr subnets
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
@@ -365,7 +367,9 @@ module "data_addons" {
           - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
-          id: ${module.vpc.private_subnets[2]}
+          tags:
+            karpenter.sh/discovery: "${module.eks.cluster_name}"
+            Name: "${module.eks.cluster_name}-private-secondary*" # Only seconddary cidr subnets
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
@@ -429,7 +433,9 @@ module "data_addons" {
           - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
-          id: ${module.vpc.private_subnets[3]}
+          tags:
+            karpenter.sh/discovery: "${module.eks.cluster_name}"
+            Name: "${module.eks.cluster_name}-private-secondary*" # Only seconddary cidr subnets
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
@@ -485,7 +491,9 @@ module "data_addons" {
           - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
-          id: ${module.vpc.private_subnets[2]}
+          tags:
+            karpenter.sh/discovery: "${module.eks.cluster_name}"
+            Name: "${module.eks.cluster_name}-private-secondary*" # Only seconddary cidr subnets
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
@@ -544,7 +552,9 @@ module "data_addons" {
           - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
-          id: ${module.vpc.private_subnets[2]}
+          tags:
+            karpenter.sh/discovery: "${module.eks.cluster_name}"
+            Name: "${module.eks.cluster_name}-private-secondary*" # Only seconddary cidr subnets
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
