@@ -206,7 +206,7 @@ module "eks" {
     }
 
 
-    }, local.has_secondary_subnets ? {
+    }, length(var.capacity_block_reservation_id) > 0 ? {
     cbr = {
       ami_type       = "AL2023_x86_64_NVIDIA"
       instance_types = ["p4de.24xlarge"]
@@ -272,7 +272,7 @@ module "eks" {
       # }
       # capacity_reservation_specification = {
       #   capacity_reservation_target = {
-      #     capacity_reservation_id = "cr-abcedefgh" # Replace with your capacity reservation ID
+      #     capacity_reservation_id = var.capacity_block_reservation_id # Replace with your capacity reservation ID
       #   }
       # }
     }
