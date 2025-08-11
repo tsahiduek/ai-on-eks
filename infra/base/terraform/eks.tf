@@ -261,18 +261,15 @@ module "eks" {
       #-------------------------------------
       subnet_ids = [local.secondary_cidr_subnets[0]]
 
-      #------------------------------------
-      # TODO - Uncomment the below block and update the capacity reservation ID
-      #------------------------------------
-      # capacity_type = "CAPACITY_BLOCK"
-      # instance_market_options = {
-      #   market_type = "capacity-block"
-      # }
-      # capacity_reservation_specification = {
-      #   capacity_reservation_target = {
-      #     capacity_reservation_id = var.capacity_block_reservation_id # Replace with your capacity reservation ID
-      #   }
-      # }
+      capacity_type = "CAPACITY_BLOCK"
+      instance_market_options = {
+        market_type = "capacity-block"
+      }
+      capacity_reservation_specification = {
+        capacity_reservation_target = {
+          capacity_reservation_id = var.capacity_block_reservation_id # Replace with your capacity reservation ID
+        }
+      }
     }
   } : {})
 }
