@@ -7,8 +7,6 @@ locals {
   secondary_cidr_subnets = compact([for subnet_id, cidr_block in zipmap(module.vpc.private_subnets, module.vpc.private_subnets_cidr_blocks) :
   substr(cidr_block, 0, 4) == "100." ? subnet_id : null])
 
-  # Ensure we have at least one secondary subnet for CBR node group
-  has_secondary_subnets = length(local.secondary_cidr_subnets) > 0
   base_addons = {
     for name, enabled in var.enable_cluster_addons :
     name => {} if enabled
